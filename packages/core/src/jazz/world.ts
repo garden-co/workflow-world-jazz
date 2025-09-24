@@ -1,6 +1,6 @@
-import { co, Group, z } from 'jazz-tools';
+import { Account, co, Group, z } from 'jazz-tools';
 import { startWorker } from 'jazz-tools/worker';
-import type { AuthProvider } from '../world/interfaces.js';
+import type { AuthProvider, World } from '../world/interfaces.js';
 import type {
   CreateWorkflowRunRequest,
   UpdateWorkflowRunRequest,
@@ -12,11 +12,31 @@ import {
 } from '../world/runs.js';
 import { PaginatedResponse } from '../world/shared.js';
 
-// export function createJazzWorld(): World {
-//   return {
-//     ...authImpl,
-//   };
-// }
+export function createJazzWorld(): World {
+  // TODO: this will become simpler once createJazzWorld can be async
+  const workerPromise = (async () => {
+    const { worker } = await startWorker({
+      // syncServer: `wss://cloud.jazz.tools/?key=${process.env.JAZZ_API_KEY}`,
+      syncServer: 'http://localhost:4201',
+      AccountSchema: JazzStorageAccount,
+    });
+
+    await worker.$jazz.ensureLoaded({
+      resolve: {
+        root: {
+          runs: true,
+        },
+      },
+    });
+
+    return worker;
+  })();
+
+  return {
+    ...authImpl,
+    ...storageImpl(workerPromise),
+  };
+}
 
 const authImpl: AuthProvider = {
   getAuthInfo: async () => {
@@ -78,29 +98,6 @@ const JazzStorageAccount = co
     }
   });
 
-let _worker:
-  | Awaited<ReturnType<typeof startWorker<typeof JazzStorageAccount>>>['worker']
-  | undefined;
-
-async function getJazzWorker() {
-  if (!_worker) {
-    ({ worker: _worker } = await startWorker({
-      syncServer: 'http://localhost:4201',
-      AccountSchema: JazzStorageAccount,
-    }));
-  }
-
-  await _worker.$jazz.ensureLoaded({
-    resolve: {
-      root: {
-        runs: true,
-      },
-    },
-  });
-
-  return _worker;
-}
-
 function toWorkflowRun(jwr: JazzWorkflowRun): WorkflowRun {
   return {
     runId: jwr.$jazz.id,
@@ -119,11 +116,14 @@ function toWorkflowRun(jwr: JazzWorkflowRun): WorkflowRun {
   };
 }
 
-// const storageImpl: Storage = {
-const storageImpl = {
+const storageImpl = (
+  workerPromise: Promise<
+    Awaited<ReturnType<typeof startWorker<typeof JazzStorageAccount>>>['worker']
+  >
+) => ({
   runs: {
     async create(data: CreateWorkflowRunRequest): Promise<WorkflowRun> {
-      const worker = await getJazzWorker();
+      const worker = await workerPromise;
 
       const now = new Date();
       const jwr = JazzWorkflowRun.create({
@@ -140,7 +140,7 @@ const storageImpl = {
     },
 
     async get(id: string): Promise<WorkflowRun> {
-      await getJazzWorker();
+      await workerPromise;
 
       const jwr = await JazzWorkflowRun.load(id);
       if (!jwr) {
@@ -154,7 +154,7 @@ const storageImpl = {
       id: string,
       data: UpdateWorkflowRunRequest
     ): Promise<WorkflowRun> {
-      await getJazzWorker();
+      await workerPromise;
 
       const jwr = await JazzWorkflowRun.load(id);
       if (!jwr) {
@@ -197,7 +197,7 @@ const storageImpl = {
     async list(
       params?: ListWorkflowRunsParams
     ): Promise<PaginatedResponse<WorkflowRun>> {
-      const worker = await getJazzWorker();
+      const worker = await workerPromise;
       await worker.root!.$jazz.ensureLoaded({
         resolve: {
           runs: {
@@ -259,9 +259,11 @@ const storageImpl = {
       return this.update(id, { status: 'running' });
     },
   },
-};
+});
 
 async function main() {
+  const world = createJazzWorld();
+
   // const run = await storageImpl.runs.create({
   //   deploymentId: '123',
   //   workflowName: 'test',
@@ -270,10 +272,10 @@ async function main() {
   // });
   // console.log(run);
 
-  const runs = await storageImpl.runs.list({
+  const runs = await world.runs.list({
     pagination: {
-      limit: 4,
-      cursor: 'co_zMn4y22CM6nGn9NGRTUiYKAKvWY',
+      limit: 3,
+      // cursor: 'co_zMn4y22CM6nGn9NGRTUiYKAKvWY',
     },
   });
   runs.data.forEach((run) => {
@@ -282,7 +284,7 @@ async function main() {
   console.log('cursor', runs.cursor);
   console.log('hasMore', runs.hasMore);
 
-  await (await getJazzWorker()).$jazz.waitForAllCoValuesSync();
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 }
 
 main()
