@@ -1,10 +1,17 @@
-import { co, z } from 'jazz-tools';
-import type { AuthProvider, World } from '../world/interfaces.js';
+import { type Account, co, Group, z } from 'jazz-tools';
+import { startWorker } from 'jazz-tools/worker';
+import type { AuthProvider, Storage, World } from '../world/interfaces.js';
 import type { CreateWorkflowRunRequest, WorkflowRun } from '../world/runs.js';
 
 export function createJazzWorld(): World {
+  // TODO: this will become simpler once createJazzWorld can be async
+  const workerPromise = startWorker({
+    syncServer: `wss://cloud.jazz.tools/?key=${process.env.JAZZ_API_KEY}`,
+  }).then(({ worker }) => worker);
+
   return {
     ...authImpl,
+    ...storageImpl(workerPromise),
   };
 }
 
@@ -42,17 +49,30 @@ const JazzWorkflowRun = co.map({
   updatedAt: z.date(), // TODO: inferrable
 });
 
-const storageImpl: Storage = {
+const storageImpl = (workerPromise: Promise<Account>): Storage => ({
   runs: {
     create: async (data: CreateWorkflowRunRequest): Promise<WorkflowRun> => {
-      const workflow = JazzWorkflowRun.create({
-        ...data,
-        input: data.input as any[], // everything should be JSON serializable
-        executionContext: data.executionContext as any,
-        status: 'pending',
-        createdAt: new Date(),
-        updatedAt: new Date(),
+      // TODO: this will become simpler once createJazzWorld can be async
+      const worker = await workerPromise;
+
+      const runGroup = Group.create({
+        owner: worker,
       });
+
+      const workflow = JazzWorkflowRun.create(
+        {
+          ...data,
+          input: data.input as any[], // everything should be JSON serializable
+          executionContext: data.executionContext as any,
+          status: 'pending',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          group: runGroup,
+        }
+      );
+
       return workflow;
     },
 
@@ -61,4 +81,4 @@ const storageImpl: Storage = {
       return workflow;
     },
   },
-};
+});
