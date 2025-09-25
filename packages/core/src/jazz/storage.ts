@@ -13,7 +13,18 @@ import {
   Step,
   UpdateStepRequest,
 } from '../world/steps.js';
-import { JazzStep, JazzStorageAccount, JazzWorkflowRun } from './types.js';
+import {
+  JazzStep,
+  JazzStorageAccount,
+  JazzWebhook,
+  JazzWorkflowRun,
+} from './types.js';
+import {
+  CreateWebhookRequest,
+  ListWebhooksByUrlParams,
+  Webhook,
+} from '../world/webhooks.js';
+import { JSONSchema7 } from 'json-schema';
 
 function toWorkflowRun(jwr: JazzWorkflowRun): WorkflowRun {
   return {
@@ -48,6 +59,15 @@ function toStep(js: JazzStep): Step {
     completedAt: js.completedAt,
     createdAt: js.createdAt,
     updatedAt: js.updatedAt,
+  };
+}
+
+function toWebhook(jw: JazzWebhook): Webhook {
+  return {
+    ...jw,
+    searchParamsSchema: jw.searchParamsSchema as Record<string, JSONSchema7>,
+    headersSchema: jw.headersSchema as Record<string, JSONSchema7>,
+    bodySchema: jw.bodySchema as JSONSchema7,
   };
 }
 
@@ -358,6 +378,123 @@ export const createStorage = (
         cursor: nextCursor,
         hasMore,
       };
+    },
+  },
+
+  webhooks: {
+    async create(runId: string, data: CreateWebhookRequest): Promise<Webhook> {
+      const worker = await workerPromise;
+      await worker.root!.$jazz.ensureLoaded({
+        resolve: {
+          webhooks: true,
+        },
+      });
+
+      const now = new Date();
+      const jw = JazzWebhook.create({
+        runId,
+        webhookId: data.webhookId,
+        ownerId: 'jazz-owner',
+        projectId: 'jazz-project',
+        environment: 'jazz',
+        allowedMethods: data.allowedMethods || [],
+        createdAt: now,
+        updatedAt: now,
+        url: data.url,
+        searchParamsSchema: data.searchParamsSchema as any,
+        headersSchema: data.headersSchema as any,
+        bodySchema: data.bodySchema as any,
+      });
+      worker.root!.webhooks!.$jazz.set(data.webhookId, jw);
+
+      return toWebhook(jw);
+    },
+
+    async get(webhookId: string, _deploymentId: string): Promise<Webhook> {
+      const worker = await workerPromise;
+
+      await worker.root!.$jazz.ensureLoaded({
+        resolve: {
+          webhooks: {
+            [webhookId]: true,
+          },
+        },
+      });
+      const jw = worker.root!.webhooks![webhookId];
+      if (!jw) {
+        throw new Error(`Webhook ${webhookId} not found`);
+      }
+
+      return toWebhook(jw);
+    },
+
+    async getByUrl(
+      url: string,
+      _deploymentId: string,
+      params?: ListWebhooksByUrlParams
+    ): Promise<PaginatedResponse<Webhook>> {
+      const worker = await workerPromise;
+      await worker.root!.$jazz.ensureLoaded({
+        resolve: {
+          webhooks: true,
+        },
+      });
+
+      const eligibleWebhooks: JazzWebhook[] = [];
+
+      const ids = Object.keys(worker.root!.webhooks!);
+      for (const id of ids) {
+        await worker.root!.webhooks!.$jazz.ensureLoaded({
+          resolve: {
+            [id]: true,
+          },
+        });
+
+        const jw = worker.root!.webhooks![id];
+        if (!jw) {
+          console.warn(`Webhook ${id} is undefined`);
+          continue;
+        }
+
+        if (jw!.url === url) {
+          eligibleWebhooks.push(jw);
+        }
+      }
+
+      const limit = params?.limit;
+      const jws = limit ? eligibleWebhooks.slice(0, limit) : eligibleWebhooks;
+      const hasMore = limit ? eligibleWebhooks.length > limit : false;
+      const nextCursor = hasMore ? jws[jws.length - 1].webhookId : null;
+
+      return {
+        data: jws.map(toWebhook),
+        cursor: nextCursor,
+        hasMore,
+      };
+    },
+
+    async dispose(webhookId: string, _deploymentId: string): Promise<Webhook> {
+      const worker = await workerPromise;
+
+      try {
+        await worker.root!.$jazz.ensureLoaded({
+          resolve: {
+            webhooks: {
+              [webhookId]: true,
+            },
+          },
+        });
+      } catch (error) {
+        throw new Error(`Webhook ${webhookId} not found`);
+      }
+
+      const jw = worker.root!.webhooks![webhookId];
+      if (!jw) {
+        throw new Error(`Webhook ${webhookId} not found`);
+      }
+      worker.root!.webhooks!.$jazz.delete(webhookId);
+
+      return toWebhook(jw);
     },
   },
 });

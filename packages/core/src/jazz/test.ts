@@ -32,19 +32,41 @@ async function main() {
   // });
   // console.log(step);
 
-  console.log('Listing steps:');
-  const steps = await world.steps.list({
-    runId: runs.data[0].runId,
-    pagination: {
-      limit: 1,
-    },
+  if (runs.data.length > 0) {
+    console.log('Listing steps:');
+    const steps = await world.steps.list({
+      runId: runs.data[0].runId,
+      pagination: {
+        limit: 1,
+      },
+    });
+    steps.data.forEach((step) => {
+      console.log(step.stepId);
+    });
+    console.log('cursor', steps.cursor);
+    console.log('hasMore', steps.hasMore);
+    console.log('\n');
+  }
+
+  // const webhook = await world.webhooks.create('run1', {
+  //   webhookId: 'webhook1',
+  //   url: 'https://example.com',
+  //   allowedMethods: ['GET'],
+  // });
+  // console.log(webhook);
+
+  const webhook2 = await world.webhooks.get('webhook1', 'jazz');
+  console.log(webhook2);
+
+  const webhooks = await world.webhooks.getByUrl('https://example.com', 'jazz');
+  webhooks.data.forEach((webhook) => {
+    console.log(webhook.webhookId, webhook.url);
   });
-  steps.data.forEach((step) => {
-    console.log(step.stepId);
-  });
-  console.log('cursor', steps.cursor);
-  console.log('hasMore', steps.hasMore);
+  console.log('cursor', webhooks.cursor);
+  console.log('hasMore', webhooks.hasMore);
   console.log('\n');
+
+  // await world.webhooks.dispose('webhook1', 'jazz');
 
   await world.done();
 }
