@@ -1,4 +1,5 @@
 import { co, Group, z } from 'jazz-tools';
+import { EventTypeSchema } from '../world/events.js';
 import { WorkflowRunSchema } from '../world/runs.js';
 import { StepSchema } from '../world/steps.js';
 import { WebhookSchema } from '../world/webhooks.js';
@@ -6,24 +7,24 @@ import { WebhookSchema } from '../world/webhooks.js';
 export const JazzWorkflowRun = co.map({
   ...WorkflowRunSchema.omit({
     runId: true,
-    input: true,
-    output: true,
-    executionContext: true,
   }).shape,
-  executionContext: z.json(),
-  input: z.array(z.json()),
-  output: z.json().optional(),
 });
 
 export type JazzWorkflowRun = co.loaded<typeof JazzWorkflowRun>;
 
-export const JazzStep = co.map({
-  ...StepSchema.omit({ input: true, output: true }).shape,
-  input: z.array(z.json()),
-  output: z.json().optional(),
-});
+export const JazzStep = co.map(StepSchema.shape);
 
 export type JazzStep = co.loaded<typeof JazzStep>;
+
+export const JazzEvent = co.map({
+  runId: z.string(),
+  eventType: EventTypeSchema,
+  eventData: z.json(),
+  correlationId: z.string().optional(),
+  createdAt: z.date(),
+});
+
+export type JazzEvent = co.loaded<typeof JazzEvent>;
 
 export const JazzWebhook = co.map({
   ...WebhookSchema.omit({
@@ -41,6 +42,7 @@ export type JazzWebhook = co.loaded<typeof JazzWebhook>;
 export const JazzStorageRoot = co.map({
   runs: co.list(JazzWorkflowRun),
   steps: co.record(z.string(), co.list(JazzStep)),
+  events: co.record(z.string(), co.list(JazzEvent)),
   webhooks: co.record(z.string(), JazzWebhook),
 });
 
@@ -58,11 +60,15 @@ export const JazzStorageAccount = co
       const steps = co
         .record(z.string(), co.list(JazzStep))
         .create({}, { owner: defaultGroup });
+      const events = co
+        .record(z.string(), co.list(JazzEvent))
+        .create({}, { owner: defaultGroup });
       const webhooks = co
         .record(z.string(), JazzWebhook)
         .create({}, { owner: defaultGroup });
       account.$jazz.set('root', {
         runs,
+        events,
         steps,
         webhooks,
       });

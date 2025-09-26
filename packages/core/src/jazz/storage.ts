@@ -1,5 +1,12 @@
+import { z } from 'zod';
 import { co } from 'jazz-tools';
 import { startWorker } from 'jazz-tools/worker';
+import { JSONSchema7 } from 'json-schema';
+import {
+  CreateEventRequest,
+  Event,
+  ListEventsParams,
+} from '../world/events.js';
 import type {
   CreateWorkflowRunRequest,
   UpdateWorkflowRunRequest,
@@ -14,17 +21,17 @@ import {
   UpdateStepRequest,
 } from '../world/steps.js';
 import {
+  CreateWebhookRequest,
+  ListWebhooksByUrlParams,
+  Webhook,
+} from '../world/webhooks.js';
+import {
+  JazzEvent,
   JazzStep,
   JazzStorageAccount,
   JazzWebhook,
   JazzWorkflowRun,
 } from './types.js';
-import {
-  CreateWebhookRequest,
-  ListWebhooksByUrlParams,
-  Webhook,
-} from '../world/webhooks.js';
-import { JSONSchema7 } from 'json-schema';
 
 function toWorkflowRun(jwr: JazzWorkflowRun): WorkflowRun {
   return {
@@ -32,8 +39,10 @@ function toWorkflowRun(jwr: JazzWorkflowRun): WorkflowRun {
     deploymentId: jwr.deploymentId,
     status: jwr.status,
     workflowName: jwr.workflowName,
-    executionContext: jwr.executionContext as Record<string, any> | undefined,
-    input: jwr.input as any[],
+    executionContext: jwr.executionContext as
+      | Record<string, z.core.util.JSONType>
+      | undefined,
+    input: jwr.input as z.core.util.JSONType[],
     output: jwr.output,
     error: jwr.error,
     errorCode: jwr.errorCode,
@@ -60,6 +69,17 @@ function toStep(js: JazzStep): Step {
     createdAt: js.createdAt,
     updatedAt: js.updatedAt,
   };
+}
+
+function toEvent(je: JazzEvent): Event {
+  return {
+    runId: je.runId,
+    eventId: je.$jazz.id,
+    eventType: je.eventType,
+    eventData: je.eventData,
+    correlationId: je.correlationId,
+    createdAt: je.createdAt,
+  } as Event;
 }
 
 function toWebhook(jw: JazzWebhook): Webhook {
@@ -132,7 +152,7 @@ export const createStorage = (
         jwr.$jazz.set('errorCode', data.errorCode);
       }
       if (data.executionContext !== undefined) {
-        jwr.$jazz.set('executionContext', data.executionContext);
+        jwr.$jazz.set('executionContext', data.executionContext as any);
       }
 
       if (data.status === 'running') {
@@ -375,6 +395,88 @@ export const createStorage = (
 
       return {
         data: jss.map(toStep),
+        cursor: nextCursor,
+        hasMore,
+      };
+    },
+  },
+
+  events: {
+    async create(runId: string, data: CreateEventRequest): Promise<Event> {
+      const worker = await workerPromise;
+      await worker.root!.$jazz.ensureLoaded({
+        resolve: {
+          events: true,
+        },
+      });
+
+      const now = new Date();
+      const je: JazzEvent = JazzEvent.create({
+        runId,
+        createdAt: now,
+        ...(data as any),
+      });
+
+      let events = worker.root!.events![runId];
+      if (!events) {
+        events = co
+          .list(JazzEvent)
+          .create([], { owner: worker.root!.events!.$jazz.owner });
+        worker.root!.events!.$jazz.set(runId, events);
+      }
+      events.$jazz.push(je);
+
+      return toEvent(je);
+    },
+
+    async list(params: ListEventsParams): Promise<PaginatedResponse<Event>> {
+      const worker = await workerPromise;
+      await worker.root!.$jazz.ensureLoaded({
+        resolve: {
+          events: {
+            [params.runId]: {
+              $each: true,
+            },
+          },
+        },
+      });
+
+      const events = worker.root!.events![params.runId];
+      if (!events) {
+        return {
+          data: [],
+          cursor: null,
+          hasMore: false,
+        };
+      }
+
+      const eligibleEvents: JazzEvent[] = [];
+
+      let startIndex = 0;
+      if (params?.pagination?.cursor) {
+        startIndex =
+          events.findIndex(
+            (je) => je!.$jazz.id === params?.pagination?.cursor
+          ) + 1;
+      }
+
+      for (let i = startIndex; i < events.length; i++) {
+        const je = events[i]!;
+        if (!je) {
+          console.warn(`Event ${i} in run ${params.runId} is undefined`);
+          continue;
+        }
+
+        eligibleEvents.push(je);
+      }
+
+      const limit = params?.pagination?.limit;
+      const jess = limit ? eligibleEvents.slice(0, limit) : eligibleEvents;
+      const hasMore = limit ? eligibleEvents.length > limit : false;
+      const nextCursor = hasMore ? jess[jess.length - 1].$jazz.id : null;
+
+      return {
+        data: jess.map(toEvent),
         cursor: nextCursor,
         hasMore,
       };
