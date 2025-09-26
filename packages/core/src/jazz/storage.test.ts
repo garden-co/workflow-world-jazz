@@ -5,6 +5,7 @@ import { createStorage } from './storage.js';
 import { Storage } from '../world/interfaces.js';
 import { WorkflowRun } from '../world/runs.js';
 import { Step } from '../world/steps.js';
+import { Event } from '../world/events.js';
 
 describe('JazzStorage', () => {
   let storage: Storage;
@@ -1057,6 +1058,521 @@ describe('JazzStorage', () => {
         expect(completedStep?.output).toEqual({ result1: 'success' });
         expect(failedStep?.status).toBe('failed');
         expect(failedStep?.error).toBe('Step 2 failed');
+      });
+    });
+  });
+
+  describe('events', () => {
+    let testRunId: string;
+
+    beforeEach(async () => {
+      // Create a test run to associate events with
+      const createdRun = await storage.runs.create({
+        deploymentId: 'test-deployment',
+        workflowName: 'test-workflow',
+        input: ['test', 'data'],
+      });
+      testRunId = createdRun.runId;
+    });
+
+    describe('create', () => {
+      it('should create a step_completed event with all required fields', async () => {
+        const createRequest = {
+          eventType: 'step_completed' as const,
+          correlationId: 'corr-123',
+          eventData: {
+            result: { success: true, data: 'processed' },
+          },
+        };
+
+        const result = await storage.events.create(testRunId, createRequest);
+
+        expect(result).toMatchObject({
+          runId: testRunId,
+          eventType: 'step_completed',
+          correlationId: 'corr-123',
+          eventData: {
+            result: { success: true, data: 'processed' },
+          },
+        });
+        expect(result.eventId).toBeDefined();
+        expect(result.createdAt).toBeInstanceOf(Date);
+      });
+
+      it('should create a step_failed event with error data', async () => {
+        const createRequest = {
+          eventType: 'step_failed' as const,
+          correlationId: 'corr-456',
+          eventData: {
+            error: { message: 'Something went wrong', code: 'ERROR_001' },
+            stack: 'Error stack trace...',
+            fatal: true,
+          },
+        };
+
+        const result = await storage.events.create(testRunId, createRequest);
+
+        expect(result).toMatchObject({
+          runId: testRunId,
+          eventType: 'step_failed',
+          correlationId: 'corr-456',
+          eventData: {
+            error: { message: 'Something went wrong', code: 'ERROR_001' },
+            stack: 'Error stack trace...',
+            fatal: true,
+          },
+        });
+        expect(result.eventId).toBeDefined();
+        expect(result.createdAt).toBeInstanceOf(Date);
+      });
+
+      it('should create a step_started event without eventData', async () => {
+        const createRequest = {
+          eventType: 'step_started' as const,
+          correlationId: 'corr-789',
+        };
+
+        const result = await storage.events.create(testRunId, createRequest);
+
+        expect(result).toMatchObject({
+          runId: testRunId,
+          eventType: 'step_started',
+          correlationId: 'corr-789',
+        });
+        expect(result.eventId).toBeDefined();
+        expect(result.createdAt).toBeInstanceOf(Date);
+      });
+
+      it('should create a webhook_created event', async () => {
+        const createRequest = {
+          eventType: 'webhook_created' as const,
+          correlationId: 'webhook-corr-123',
+        };
+
+        const result = await storage.events.create(testRunId, createRequest);
+
+        expect(result).toMatchObject({
+          runId: testRunId,
+          eventType: 'webhook_created',
+          correlationId: 'webhook-corr-123',
+        });
+        expect(result.eventId).toBeDefined();
+        expect(result.createdAt).toBeInstanceOf(Date);
+      });
+
+      it('should create a webhook_request event with request data', async () => {
+        const createRequest = {
+          eventType: 'webhook_request' as const,
+          correlationId: 'webhook-req-456',
+          eventData: {
+            request: {
+              method: 'POST',
+              url: 'https://example.com/webhook',
+              headers: { 'Content-Type': 'application/json' },
+              body: { data: 'test' },
+            },
+          },
+        };
+
+        const result = await storage.events.create(testRunId, createRequest);
+
+        expect(result).toMatchObject({
+          runId: testRunId,
+          eventType: 'webhook_request',
+          correlationId: 'webhook-req-456',
+          eventData: {
+            request: {
+              method: 'POST',
+              url: 'https://example.com/webhook',
+              headers: { 'Content-Type': 'application/json' },
+              body: { data: 'test' },
+            },
+          },
+        });
+        expect(result.eventId).toBeDefined();
+        expect(result.createdAt).toBeInstanceOf(Date);
+      });
+
+      it('should create a step_retrying event with attempt data', async () => {
+        const createRequest = {
+          eventType: 'step_retrying' as const,
+          correlationId: 'retry-corr-789',
+          eventData: {
+            error: { message: 'Temporary failure' },
+            attempt: 2,
+          },
+        };
+
+        const result = await storage.events.create(testRunId, createRequest);
+
+        expect(result).toMatchObject({
+          runId: testRunId,
+          eventType: 'step_retrying',
+          correlationId: 'retry-corr-789',
+          eventData: {
+            error: { message: 'Temporary failure' },
+            attempt: 2,
+          },
+        });
+        expect(result.eventId).toBeDefined();
+        expect(result.createdAt).toBeInstanceOf(Date);
+      });
+
+      it('should create a workflow_started event', async () => {
+        const createRequest = {
+          eventType: 'workflow_started' as const,
+        };
+
+        const result = await storage.events.create(testRunId, createRequest);
+
+        expect(result).toMatchObject({
+          runId: testRunId,
+          eventType: 'workflow_started',
+        });
+        expect(result.eventId).toBeDefined();
+        expect(result.createdAt).toBeInstanceOf(Date);
+      });
+
+      it('should create a workflow_completed event', async () => {
+        const createRequest = {
+          eventType: 'workflow_completed' as const,
+        };
+
+        const result = await storage.events.create(testRunId, createRequest);
+
+        expect(result).toMatchObject({
+          runId: testRunId,
+          eventType: 'workflow_completed',
+        });
+        expect(result.eventId).toBeDefined();
+        expect(result.createdAt).toBeInstanceOf(Date);
+      });
+
+      it('should create a workflow_failed event with error data', async () => {
+        const createRequest = {
+          eventType: 'workflow_failed' as const,
+          eventData: {
+            error: {
+              message: 'Workflow execution failed',
+              code: 'WORKFLOW_ERROR',
+            },
+          },
+        };
+
+        const result = await storage.events.create(testRunId, createRequest);
+
+        expect(result).toMatchObject({
+          runId: testRunId,
+          eventType: 'workflow_failed',
+          eventData: {
+            error: {
+              message: 'Workflow execution failed',
+              code: 'WORKFLOW_ERROR',
+            },
+          },
+        });
+        expect(result.eventId).toBeDefined();
+        expect(result.createdAt).toBeInstanceOf(Date);
+      });
+
+      it('should create a webhook_disposed event', async () => {
+        const createRequest = {
+          eventType: 'webhook_disposed' as const,
+          correlationId: 'dispose-corr-123',
+        };
+
+        const result = await storage.events.create(testRunId, createRequest);
+
+        expect(result).toMatchObject({
+          runId: testRunId,
+          eventType: 'webhook_disposed',
+          correlationId: 'dispose-corr-123',
+        });
+        expect(result.eventId).toBeDefined();
+        expect(result.createdAt).toBeInstanceOf(Date);
+      });
+
+      it('should create multiple events for the same run', async () => {
+        const event1 = await storage.events.create(testRunId, {
+          eventType: 'step_started',
+          correlationId: 'step-1',
+        });
+
+        const event2 = await storage.events.create(testRunId, {
+          eventType: 'step_completed',
+          correlationId: 'step-1',
+          eventData: {
+            result: { success: true },
+          },
+        });
+
+        expect(event1.runId).toBe(testRunId);
+        expect(event2.runId).toBe(testRunId);
+        expect(event1.eventType).toBe('step_started');
+        expect(event2.eventType).toBe('step_completed');
+        expect(event1.eventId).not.toBe(event2.eventId);
+      });
+
+      it('should handle complex event data structures', async () => {
+        const complexEventData = {
+          result: {
+            nested: {
+              deeply: {
+                value: 42,
+                array: [1, 2, { mixed: 'array' }],
+                nullValue: null,
+                booleanValue: true,
+                numberValue: 3.14,
+              },
+            },
+          },
+        };
+
+        const createRequest = {
+          eventType: 'step_completed' as const,
+          correlationId: 'complex-corr',
+          eventData: complexEventData,
+        };
+
+        const result = await storage.events.create(testRunId, createRequest);
+
+        expect((result as any).eventData).toEqual(complexEventData);
+      });
+    });
+
+    describe('list', () => {
+      beforeEach(async () => {
+        // Create multiple events for testing
+        const events = [
+          {
+            eventType: 'workflow_started' as const,
+          },
+          {
+            eventType: 'step_started' as const,
+            correlationId: 'step-1',
+          },
+          {
+            eventType: 'step_completed' as const,
+            correlationId: 'step-1',
+            eventData: {
+              result: { success: true },
+            },
+          },
+          {
+            eventType: 'step_started' as const,
+            correlationId: 'step-2',
+          },
+          {
+            eventType: 'step_failed' as const,
+            correlationId: 'step-2',
+            eventData: {
+              error: { message: 'Step failed' },
+              fatal: false,
+            },
+          },
+        ];
+
+        for (const event of events) {
+          await storage.events.create(testRunId, event);
+        }
+      });
+
+      it('should list all events when no pagination is provided', async () => {
+        const result = await storage.events.list({ runId: testRunId });
+
+        expect(result.data).toHaveLength(5);
+        expect(result.hasMore).toBe(false);
+        expect(result.cursor).toBeNull();
+        expect(result.data.map((event) => event.eventType)).toEqual([
+          'workflow_started',
+          'step_started',
+          'step_completed',
+          'step_started',
+          'step_failed',
+        ]);
+      });
+
+      it('should handle pagination with limit', async () => {
+        const result = await storage.events.list({
+          runId: testRunId,
+          pagination: { limit: 3 },
+        });
+
+        expect(result.data).toHaveLength(3);
+        expect(result.hasMore).toBe(true);
+        expect(result.cursor).toBeDefined();
+      });
+
+      it('should handle pagination with cursor', async () => {
+        const firstPage = await storage.events.list({
+          runId: testRunId,
+          pagination: { limit: 3 },
+        });
+
+        const secondPage = await storage.events.list({
+          runId: testRunId,
+          pagination: {
+            limit: 3,
+            cursor: firstPage.cursor!,
+          },
+        });
+
+        expect(secondPage.data).toHaveLength(2);
+        expect(secondPage.hasMore).toBe(false);
+        expect(secondPage.cursor).toBeNull();
+
+        // Ensure no overlap between pages
+        const firstPageIds = firstPage.data.map((event) => event.eventId);
+        const secondPageIds = secondPage.data.map((event) => event.eventId);
+        expect(firstPageIds).not.toEqual(expect.arrayContaining(secondPageIds));
+      });
+
+      it('should return empty result when no events exist for run', async () => {
+        // Create a fresh run with no events
+        const freshRun = await storage.runs.create({
+          deploymentId: 'fresh-deployment',
+          workflowName: 'fresh-workflow',
+          input: ['fresh'],
+        });
+
+        const result = await storage.events.list({ runId: freshRun.runId });
+
+        expect(result.data).toHaveLength(0);
+        expect(result.hasMore).toBe(false);
+        expect(result.cursor).toBeNull();
+      });
+
+      it('should return empty result when run does not exist', async () => {
+        const result = await storage.events.list({ runId: 'non-existent-run' });
+
+        expect(result.data).toHaveLength(0);
+        expect(result.hasMore).toBe(false);
+        expect(result.cursor).toBeNull();
+      });
+
+      it('should maintain chronological order of events', async () => {
+        const result = await storage.events.list({ runId: testRunId });
+
+        // Events should be in the order they were created
+        expect(result.data[0].eventType).toBe('workflow_started');
+        expect(result.data[1].eventType).toBe('step_started');
+        expect(result.data[1].correlationId).toBe('step-1');
+        expect(result.data[2].eventType).toBe('step_completed');
+        expect(result.data[2].correlationId).toBe('step-1');
+        expect(result.data[3].eventType).toBe('step_started');
+        expect(result.data[3].correlationId).toBe('step-2');
+        expect(result.data[4].eventType).toBe('step_failed');
+        expect(result.data[4].correlationId).toBe('step-2');
+      });
+    });
+
+    describe('integration scenarios', () => {
+      it('should handle complete workflow event sequence', async () => {
+        // Workflow starts
+        const workflowStarted = await storage.events.create(testRunId, {
+          eventType: 'workflow_started',
+        });
+
+        // Step 1 starts and completes
+        const step1Started = await storage.events.create(testRunId, {
+          eventType: 'step_started',
+          correlationId: 'step-1',
+        });
+
+        const step1Completed = await storage.events.create(testRunId, {
+          eventType: 'step_completed',
+          correlationId: 'step-1',
+          eventData: {
+            result: { processed: 'data-1' },
+          },
+        });
+
+        // Step 2 starts and fails
+        const step2Started = await storage.events.create(testRunId, {
+          eventType: 'step_started',
+          correlationId: 'step-2',
+        });
+
+        const step2Failed = await storage.events.create(testRunId, {
+          eventType: 'step_failed',
+          correlationId: 'step-2',
+          eventData: {
+            error: { message: 'Step 2 failed' },
+            fatal: true,
+          },
+        });
+
+        // Workflow fails
+        const workflowFailed = await storage.events.create(testRunId, {
+          eventType: 'workflow_failed',
+          eventData: {
+            error: { message: 'Workflow failed due to step 2' },
+          },
+        });
+
+        // List all events and verify sequence
+        const allEvents = await storage.events.list({ runId: testRunId });
+
+        expect(allEvents.data).toHaveLength(6);
+        expect(allEvents.data[0].eventType).toBe('workflow_started');
+        expect(allEvents.data[1].eventType).toBe('step_started');
+        expect(allEvents.data[1].correlationId).toBe('step-1');
+        expect(allEvents.data[2].eventType).toBe('step_completed');
+        expect(allEvents.data[2].correlationId).toBe('step-1');
+        expect(allEvents.data[3].eventType).toBe('step_started');
+        expect(allEvents.data[3].correlationId).toBe('step-2');
+        expect(allEvents.data[4].eventType).toBe('step_failed');
+        expect(allEvents.data[4].correlationId).toBe('step-2');
+        expect(allEvents.data[5].eventType).toBe('workflow_failed');
+      });
+
+      it('should maintain data integrity across multiple runs', async () => {
+        // Create another run
+        const secondRun = await storage.runs.create({
+          deploymentId: 'second-deployment',
+          workflowName: 'second-workflow',
+          input: ['second-data'],
+        });
+
+        // Create events for both runs
+        await storage.events.create(testRunId, {
+          eventType: 'workflow_started',
+        });
+
+        await storage.events.create(secondRun.runId, {
+          eventType: 'workflow_started',
+        });
+
+        await storage.events.create(testRunId, {
+          eventType: 'workflow_completed',
+        });
+
+        await storage.events.create(secondRun.runId, {
+          eventType: 'workflow_failed',
+          eventData: {
+            error: { message: 'Second workflow failed' },
+          },
+        });
+
+        // List events for each run separately
+        const firstRunEvents = await storage.events.list({ runId: testRunId });
+        const secondRunEvents = await storage.events.list({
+          runId: secondRun.runId,
+        });
+
+        expect(firstRunEvents.data).toHaveLength(2);
+        expect(firstRunEvents.data[0].eventType).toBe('workflow_started');
+        expect(firstRunEvents.data[1].eventType).toBe('workflow_completed');
+        expect(firstRunEvents.data.every((e) => e.runId === testRunId)).toBe(
+          true
+        );
+
+        expect(secondRunEvents.data).toHaveLength(2);
+        expect(secondRunEvents.data[0].eventType).toBe('workflow_started');
+        expect(secondRunEvents.data[1].eventType).toBe('workflow_failed');
+        expect(
+          secondRunEvents.data.every((e) => e.runId === secondRun.runId)
+        ).toBe(true);
       });
     });
   });
