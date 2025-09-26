@@ -6,6 +6,7 @@ import { Storage } from '../world/interfaces.js';
 import { WorkflowRun } from '../world/runs.js';
 import { Step } from '../world/steps.js';
 import { Event } from '../world/events.js';
+import { Webhook } from '../world/webhooks.js';
 
 describe('JazzStorage', () => {
   let storage: Storage;
@@ -31,11 +32,8 @@ describe('JazzStorage', () => {
         const result = await storage.runs.create(createRequest);
 
         expect(result).toMatchObject({
-          deploymentId: 'test-deployment',
-          workflowName: 'test-workflow',
           status: 'pending',
-          input: ['arg1', 'arg2', { nested: 'object' }],
-          executionContext: { userId: 'user123', environment: 'test' },
+          ...createRequest,
         });
         expect(result.runId).toBeDefined();
         expect(result.createdAt).toBeInstanceOf(Date);
@@ -57,11 +55,9 @@ describe('JazzStorage', () => {
         const result = await storage.runs.create(createRequest);
 
         expect(result).toMatchObject({
-          deploymentId: 'test-deployment',
-          workflowName: 'test-workflow',
           status: 'pending',
-          input: ['simple', 'args'],
           executionContext: undefined,
+          ...createRequest,
         });
       });
 
@@ -569,11 +565,9 @@ describe('JazzStorage', () => {
 
         expect(result).toMatchObject({
           runId: testRunId,
-          stepId: 'step-1',
-          stepName: 'test-step',
           status: 'pending',
-          input: ['arg1', 'arg2', { nested: 'object' }],
           attempt: 1,
+          ...createRequest,
         });
         expect(result.createdAt).toBeInstanceOf(Date);
         expect(result.updatedAt).toBeInstanceOf(Date);
@@ -1089,11 +1083,7 @@ describe('JazzStorage', () => {
 
         expect(result).toMatchObject({
           runId: testRunId,
-          eventType: 'step_completed',
-          correlationId: 'corr-123',
-          eventData: {
-            result: { success: true, data: 'processed' },
-          },
+          ...createRequest,
         });
         expect(result.eventId).toBeDefined();
         expect(result.createdAt).toBeInstanceOf(Date);
@@ -1114,13 +1104,7 @@ describe('JazzStorage', () => {
 
         expect(result).toMatchObject({
           runId: testRunId,
-          eventType: 'step_failed',
-          correlationId: 'corr-456',
-          eventData: {
-            error: { message: 'Something went wrong', code: 'ERROR_001' },
-            stack: 'Error stack trace...',
-            fatal: true,
-          },
+          ...createRequest,
         });
         expect(result.eventId).toBeDefined();
         expect(result.createdAt).toBeInstanceOf(Date);
@@ -1136,8 +1120,7 @@ describe('JazzStorage', () => {
 
         expect(result).toMatchObject({
           runId: testRunId,
-          eventType: 'step_started',
-          correlationId: 'corr-789',
+          ...createRequest,
         });
         expect(result.eventId).toBeDefined();
         expect(result.createdAt).toBeInstanceOf(Date);
@@ -1153,8 +1136,7 @@ describe('JazzStorage', () => {
 
         expect(result).toMatchObject({
           runId: testRunId,
-          eventType: 'webhook_created',
-          correlationId: 'webhook-corr-123',
+          ...createRequest,
         });
         expect(result.eventId).toBeDefined();
         expect(result.createdAt).toBeInstanceOf(Date);
@@ -1178,16 +1160,7 @@ describe('JazzStorage', () => {
 
         expect(result).toMatchObject({
           runId: testRunId,
-          eventType: 'webhook_request',
-          correlationId: 'webhook-req-456',
-          eventData: {
-            request: {
-              method: 'POST',
-              url: 'https://example.com/webhook',
-              headers: { 'Content-Type': 'application/json' },
-              body: { data: 'test' },
-            },
-          },
+          ...createRequest,
         });
         expect(result.eventId).toBeDefined();
         expect(result.createdAt).toBeInstanceOf(Date);
@@ -1207,12 +1180,7 @@ describe('JazzStorage', () => {
 
         expect(result).toMatchObject({
           runId: testRunId,
-          eventType: 'step_retrying',
-          correlationId: 'retry-corr-789',
-          eventData: {
-            error: { message: 'Temporary failure' },
-            attempt: 2,
-          },
+          ...createRequest,
         });
         expect(result.eventId).toBeDefined();
         expect(result.createdAt).toBeInstanceOf(Date);
@@ -1227,7 +1195,7 @@ describe('JazzStorage', () => {
 
         expect(result).toMatchObject({
           runId: testRunId,
-          eventType: 'workflow_started',
+          ...createRequest,
         });
         expect(result.eventId).toBeDefined();
         expect(result.createdAt).toBeInstanceOf(Date);
@@ -1242,7 +1210,7 @@ describe('JazzStorage', () => {
 
         expect(result).toMatchObject({
           runId: testRunId,
-          eventType: 'workflow_completed',
+          ...createRequest,
         });
         expect(result.eventId).toBeDefined();
         expect(result.createdAt).toBeInstanceOf(Date);
@@ -1263,13 +1231,7 @@ describe('JazzStorage', () => {
 
         expect(result).toMatchObject({
           runId: testRunId,
-          eventType: 'workflow_failed',
-          eventData: {
-            error: {
-              message: 'Workflow execution failed',
-              code: 'WORKFLOW_ERROR',
-            },
-          },
+          ...createRequest,
         });
         expect(result.eventId).toBeDefined();
         expect(result.createdAt).toBeInstanceOf(Date);
@@ -1285,8 +1247,7 @@ describe('JazzStorage', () => {
 
         expect(result).toMatchObject({
           runId: testRunId,
-          eventType: 'webhook_disposed',
-          correlationId: 'dispose-corr-123',
+          ...createRequest,
         });
         expect(result.eventId).toBeDefined();
         expect(result.createdAt).toBeInstanceOf(Date);
@@ -1573,6 +1534,486 @@ describe('JazzStorage', () => {
         expect(
           secondRunEvents.data.every((e) => e.runId === secondRun.runId)
         ).toBe(true);
+      });
+    });
+  });
+
+  describe('webhooks', () => {
+    let testRunId: string;
+    const testDeploymentId = 'test-deployment';
+
+    beforeEach(async () => {
+      // Create a test run to associate webhooks with
+      const createdRun = await storage.runs.create({
+        deploymentId: testDeploymentId,
+        workflowName: 'test-workflow',
+        input: ['test', 'data'],
+      });
+      testRunId = createdRun.runId;
+    });
+
+    describe('create', () => {
+      it('should create a webhook with all required fields', async () => {
+        const createRequest = {
+          webhookId: 'webhook-1',
+          url: 'https://example.com/webhook',
+          allowedMethods: ['POST', 'GET'],
+          searchParamsSchema: {
+            id: { type: 'string' },
+            token: { type: 'string' },
+          } as any,
+          headersSchema: {
+            'Content-Type': { type: 'string' },
+            Authorization: { type: 'string' },
+          } as any,
+          bodySchema: {
+            type: 'object',
+            properties: {
+              data: { type: 'string' },
+              timestamp: { type: 'number' },
+            },
+            required: ['data'],
+          } as any,
+        };
+
+        const result = await storage.webhooks.create(testRunId, createRequest);
+
+        expect(result).toMatchObject({
+          runId: testRunId,
+          ...createRequest,
+        });
+        expect(result.createdAt).toBeInstanceOf(Date);
+        expect(result.updatedAt).toBeInstanceOf(Date);
+      });
+
+      it('should create a webhook with minimal required fields', async () => {
+        const createRequest = {
+          webhookId: 'webhook-minimal',
+        };
+
+        const result = await storage.webhooks.create(testRunId, createRequest);
+
+        expect(result).toMatchObject({
+          runId: testRunId,
+          ownerId: 'jazz-owner',
+          projectId: 'jazz-project',
+          environment: 'jazz',
+          allowedMethods: [],
+          ...createRequest,
+        });
+        expect(result.url).toBeUndefined();
+        expect(result.searchParamsSchema).toBeUndefined();
+        expect(result.headersSchema).toBeUndefined();
+        expect(result.bodySchema).toBeUndefined();
+        expect(result.createdAt).toBeInstanceOf(Date);
+        expect(result.updatedAt).toBeInstanceOf(Date);
+      });
+
+      it('should create a webhook with only URL and allowed methods', async () => {
+        const createRequest = {
+          webhookId: 'webhook-simple',
+          url: 'https://api.example.com/hooks/simple',
+          allowedMethods: ['POST'],
+        };
+
+        const result = await storage.webhooks.create(testRunId, createRequest);
+
+        expect(result).toMatchObject({
+          runId: testRunId,
+          ...createRequest,
+        });
+        expect(result.searchParamsSchema).toBeUndefined();
+        expect(result.headersSchema).toBeUndefined();
+        expect(result.bodySchema).toBeUndefined();
+      });
+
+      it('should create multiple webhooks for the same run', async () => {
+        const webhook1 = await storage.webhooks.create(testRunId, {
+          webhookId: 'webhook-1',
+          url: 'https://example.com/webhook1',
+          allowedMethods: ['POST'],
+        });
+
+        const webhook2 = await storage.webhooks.create(testRunId, {
+          webhookId: 'webhook-2',
+          url: 'https://example.com/webhook2',
+          allowedMethods: ['GET', 'POST'],
+        });
+
+        expect(webhook1.runId).toBe(testRunId);
+        expect(webhook2.runId).toBe(testRunId);
+        expect(webhook1.webhookId).toBe('webhook-1');
+        expect(webhook2.webhookId).toBe('webhook-2');
+        expect(webhook1.url).toBe('https://example.com/webhook1');
+        expect(webhook2.url).toBe('https://example.com/webhook2');
+      });
+
+      it('should handle complex JSON schemas', async () => {
+        const complexBodySchema = {
+          type: 'object',
+          properties: {
+            user: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                name: { type: 'string' },
+                email: { type: 'string', format: 'email' },
+                preferences: {
+                  type: 'object',
+                  properties: {
+                    notifications: { type: 'boolean' },
+                    theme: { type: 'string', enum: ['light', 'dark'] },
+                  },
+                },
+              },
+              required: ['id', 'name'],
+            },
+            metadata: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  key: { type: 'string' },
+                  value: { type: 'string' },
+                },
+              },
+            },
+          },
+          required: ['user'],
+        } as any;
+
+        const createRequest = {
+          webhookId: 'webhook-complex',
+          url: 'https://api.example.com/webhook',
+          allowedMethods: ['POST', 'PUT'],
+          bodySchema: complexBodySchema,
+        };
+
+        const result = await storage.webhooks.create(testRunId, createRequest);
+
+        expect(result.bodySchema).toEqual(complexBodySchema);
+      });
+    });
+
+    describe('get', () => {
+      it('should retrieve an existing webhook', async () => {
+        const createRequest = {
+          webhookId: 'webhook-1',
+          url: 'https://example.com/webhook',
+          allowedMethods: ['POST'],
+        };
+
+        const created = await storage.webhooks.create(testRunId, createRequest);
+        const retrieved = await storage.webhooks.get(
+          created.webhookId,
+          testDeploymentId
+        );
+
+        expect(retrieved).toEqual(created);
+      });
+
+      it('should throw error when webhook does not exist', async () => {
+        await expect(
+          storage.webhooks.get('non-existent-webhook', testDeploymentId)
+        ).rejects.toThrow();
+      });
+
+      it('should retrieve webhook with all fields populated', async () => {
+        const createRequest = {
+          webhookId: 'webhook-complete',
+          url: 'https://api.example.com/complete',
+          allowedMethods: ['GET', 'POST', 'PUT'],
+          searchParamsSchema: {
+            version: { type: 'string' },
+            format: { type: 'string', enum: ['json', 'xml'] },
+          } as any,
+          headersSchema: {
+            'X-API-Key': { type: 'string' },
+            'X-Client-Version': { type: 'string' },
+          } as any,
+          bodySchema: {
+            type: 'object',
+            properties: {
+              action: { type: 'string' },
+              payload: { type: 'object' },
+            },
+          } as any,
+        };
+
+        const created = await storage.webhooks.create(testRunId, createRequest);
+        const retrieved = await storage.webhooks.get(
+          created.webhookId,
+          testDeploymentId
+        );
+
+        expect(retrieved).toEqual(created);
+        expect(retrieved).toMatchObject(createRequest);
+      });
+    });
+
+    describe('getByUrl', () => {
+      beforeEach(async () => {
+        // Create multiple webhooks with different URLs for testing
+        const webhooks = [
+          {
+            webhookId: 'webhook-url1-1',
+            url: 'https://example.com/webhook',
+            allowedMethods: ['POST'],
+          },
+          {
+            webhookId: 'webhook-url1-2',
+            url: 'https://example.com/webhook',
+            allowedMethods: ['GET'],
+          },
+          {
+            webhookId: 'webhook-url2-1',
+            url: 'https://api.example.com/hooks',
+            allowedMethods: ['POST', 'PUT'],
+          },
+          {
+            webhookId: 'webhook-no-url',
+            allowedMethods: ['POST'],
+          },
+        ];
+
+        for (const webhook of webhooks) {
+          await storage.webhooks.create(testRunId, webhook);
+        }
+      });
+
+      it('should return webhooks matching the URL', async () => {
+        const result = await storage.webhooks.getByUrl(
+          'https://example.com/webhook',
+          testDeploymentId
+        );
+
+        expect(result.data).toHaveLength(2);
+        expect(result.hasMore).toBe(false);
+        expect(result.cursor).toBeNull();
+        expect(result.data.map((w) => w.webhookId)).toEqual([
+          'webhook-url1-1',
+          'webhook-url1-2',
+        ]);
+        expect(
+          result.data.every((w) => w.url === 'https://example.com/webhook')
+        ).toBe(true);
+      });
+
+      it('should return empty result when no webhooks match URL', async () => {
+        const result = await storage.webhooks.getByUrl(
+          'https://nonexistent.com/webhook',
+          testDeploymentId
+        );
+
+        expect(result.data).toHaveLength(0);
+        expect(result.hasMore).toBe(false);
+        expect(result.cursor).toBeNull();
+      });
+
+      it('should handle pagination with limit', async () => {
+        const result = await storage.webhooks.getByUrl(
+          'https://example.com/webhook',
+          testDeploymentId,
+          { limit: 1 }
+        );
+
+        expect(result.data).toHaveLength(1);
+        expect(result.hasMore).toBe(true);
+        expect(result.cursor).toBeDefined();
+      });
+
+      it('should return webhooks with different URLs separately', async () => {
+        const url1Result = await storage.webhooks.getByUrl(
+          'https://example.com/webhook',
+          testDeploymentId
+        );
+        const url2Result = await storage.webhooks.getByUrl(
+          'https://api.example.com/hooks',
+          testDeploymentId
+        );
+
+        expect(url1Result.data).toHaveLength(2);
+        expect(url2Result.data).toHaveLength(1);
+        expect(url1Result.data[0].url).toBe('https://example.com/webhook');
+        expect(url2Result.data[0].url).toBe('https://api.example.com/hooks');
+      });
+
+      it('should not return webhooks without URLs when searching by URL', async () => {
+        const result = await storage.webhooks.getByUrl(
+          'https://example.com/webhook',
+          testDeploymentId
+        );
+
+        expect(result.data).toHaveLength(2);
+        expect(
+          result.data.every((w) => w.url === 'https://example.com/webhook')
+        ).toBe(true);
+        expect(
+          result.data.find((w) => w.webhookId === 'webhook-no-url')
+        ).toBeUndefined();
+      });
+    });
+
+    describe('dispose', () => {
+      it('should dispose an existing webhook', async () => {
+        const createRequest = {
+          webhookId: 'webhook-to-dispose',
+          url: 'https://example.com/webhook',
+          allowedMethods: ['POST'],
+        };
+
+        const created = await storage.webhooks.create(testRunId, createRequest);
+        const disposed = await storage.webhooks.dispose(
+          created.webhookId,
+          testDeploymentId
+        );
+
+        expect(disposed).toEqual(created);
+
+        // Verify webhook is no longer retrievable
+        await expect(
+          storage.webhooks.get(created.webhookId, testDeploymentId)
+        ).rejects.toThrow();
+      });
+
+      it('should throw error when trying to dispose non-existent webhook', async () => {
+        await expect(
+          storage.webhooks.dispose('non-existent-webhook', testDeploymentId)
+        ).rejects.toThrow('Webhook non-existent-webhook not found');
+      });
+
+      it('should dispose webhook and remove it from getByUrl results', async () => {
+        const webhook1 = await storage.webhooks.create(testRunId, {
+          webhookId: 'webhook-dispose-1',
+          url: 'https://example.com/dispose-test',
+          allowedMethods: ['POST'],
+        });
+
+        const webhook2 = await storage.webhooks.create(testRunId, {
+          webhookId: 'webhook-dispose-2',
+          url: 'https://example.com/dispose-test',
+          allowedMethods: ['GET'],
+        });
+
+        // Verify both webhooks exist
+        const beforeDispose = await storage.webhooks.getByUrl(
+          'https://example.com/dispose-test',
+          testDeploymentId
+        );
+        expect(beforeDispose.data).toHaveLength(2);
+
+        // Dispose one webhook
+        await storage.webhooks.dispose(webhook1.webhookId, testDeploymentId);
+
+        // Verify only one webhook remains
+        const afterDispose = await storage.webhooks.getByUrl(
+          'https://example.com/dispose-test',
+          testDeploymentId
+        );
+        expect(afterDispose.data).toHaveLength(1);
+        expect(afterDispose.data[0].webhookId).toBe('webhook-dispose-2');
+      });
+    });
+
+    describe('integration scenarios', () => {
+      it('should handle complete webhook lifecycle', async () => {
+        // Create webhook
+        const created = await storage.webhooks.create(testRunId, {
+          webhookId: 'lifecycle-webhook',
+          url: 'https://api.example.com/lifecycle',
+          allowedMethods: ['POST'],
+          bodySchema: {
+            type: 'object',
+            properties: {
+              event: { type: 'string' },
+              data: { type: 'object' },
+            },
+          },
+        });
+
+        expect(created.webhookId).toBe('lifecycle-webhook');
+        expect(created.url).toBe('https://api.example.com/lifecycle');
+
+        // Retrieve webhook
+        const retrieved = await storage.webhooks.get(
+          created.webhookId,
+          testDeploymentId
+        );
+        expect(retrieved).toEqual(created);
+
+        // Find webhook by URL
+        const byUrl = await storage.webhooks.getByUrl(
+          'https://api.example.com/lifecycle',
+          testDeploymentId
+        );
+        expect(byUrl.data).toHaveLength(1);
+        expect(byUrl.data[0].webhookId).toBe('lifecycle-webhook');
+
+        // Dispose webhook
+        const disposed = await storage.webhooks.dispose(
+          created.webhookId,
+          testDeploymentId
+        );
+        expect(disposed.webhookId).toBe('lifecycle-webhook');
+
+        // Verify webhook is gone
+        await expect(
+          storage.webhooks.get(created.webhookId, testDeploymentId)
+        ).rejects.toThrow();
+      });
+
+      it('should maintain data integrity across multiple runs', async () => {
+        // Create another run
+        const secondRun = await storage.runs.create({
+          deploymentId: 'second-deployment',
+          workflowName: 'second-workflow',
+          input: ['second-data'],
+        });
+
+        // Create webhooks for both runs
+        const webhook1 = await storage.webhooks.create(testRunId, {
+          webhookId: 'run1-webhook',
+          url: 'https://api.example.com/run1',
+          allowedMethods: ['POST'],
+        });
+
+        const webhook2 = await storage.webhooks.create(secondRun.runId, {
+          webhookId: 'run2-webhook',
+          url: 'https://api.example.com/run2',
+          allowedMethods: ['GET'],
+        });
+
+        // Verify webhooks are isolated by run
+        expect(webhook1.runId).toBe(testRunId);
+        expect(webhook2.runId).toBe(secondRun.runId);
+
+        // Verify webhooks can be retrieved independently
+        const retrieved1 = await storage.webhooks.get(
+          'run1-webhook',
+          testDeploymentId
+        );
+        const retrieved2 = await storage.webhooks.get(
+          'run2-webhook',
+          'second-deployment'
+        );
+
+        expect(retrieved1.runId).toBe(testRunId);
+        expect(retrieved2.runId).toBe(secondRun.runId);
+
+        // Verify getByUrl works independently
+        const url1Results = await storage.webhooks.getByUrl(
+          'https://api.example.com/run1',
+          testDeploymentId
+        );
+        const url2Results = await storage.webhooks.getByUrl(
+          'https://api.example.com/run2',
+          'second-deployment'
+        );
+
+        expect(url1Results.data).toHaveLength(1);
+        expect(url1Results.data[0].webhookId).toBe('run1-webhook');
+        expect(url2Results.data).toHaveLength(1);
+        expect(url2Results.data[0].webhookId).toBe('run2-webhook');
       });
     });
   });
