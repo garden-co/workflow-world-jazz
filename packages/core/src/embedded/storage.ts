@@ -1,5 +1,4 @@
 import path from 'node:path';
-import { z } from 'zod';
 import type {
   CreateEventRequest,
   CreateStepRequest,
@@ -86,10 +85,6 @@ export function createStorage(basedir: string): Storage {
         const updatedRun: WorkflowRun = {
           ...run,
           ...data,
-          output: data.output as z.core.util.JSONType | undefined,
-          executionContext: data.executionContext as
-            | Record<string, z.core.util.JSONType>
-            | undefined,
           updatedAt: now,
         };
 
@@ -191,7 +186,6 @@ export function createStorage(basedir: string): Storage {
         const updatedStep: Step = {
           ...step,
           ...data,
-          output: data.output as z.core.util.JSONType | undefined,
           updatedAt: now,
         };
 
