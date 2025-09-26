@@ -17,9 +17,9 @@ export const WorkflowRunSchema = z.object({
   deploymentId: z.string(),
   status: WorkflowRunStatusSchema,
   workflowName: z.string(),
-  executionContext: z.record(z.string(), z.any()).optional(),
-  input: z.array(z.any()),
-  output: z.any().optional(),
+  executionContext: z.record(z.string(), z.json()).optional(),
+  input: z.array(z.json()),
+  output: z.json().optional(),
   error: z.string().optional(),
   errorCode: z.string().optional(),
   startedAt: z.coerce.date().optional(),
@@ -45,7 +45,7 @@ export interface UpdateWorkflowRunRequest {
   output?: Serializable;
   error?: string;
   errorCode?: string;
-  executionContext?: Record<string, any>;
+  executionContext?: Record<string, Serializable>;
 }
 
 export interface ListWorkflowRunsParams {
