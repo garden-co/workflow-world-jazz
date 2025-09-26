@@ -7,12 +7,25 @@ import { WebhookSchema } from '../world/webhooks.js';
 export const JazzWorkflowRun = co.map({
   ...WorkflowRunSchema.omit({
     runId: true,
+    input: true,
+    output: true,
+    executionContext: true,
   }).shape,
+  input: z.array(z.json()),
+  output: z.json().optional(),
+  executionContext: co.record(z.string(), z.json()).optional(),
 });
 
 export type JazzWorkflowRun = co.loaded<typeof JazzWorkflowRun>;
 
-export const JazzStep = co.map(StepSchema.shape);
+export const JazzStep = co.map({
+  ...StepSchema.omit({
+    input: true,
+    output: true,
+  }).shape,
+  input: z.array(z.json()),
+  output: z.json().optional(),
+});
 
 export type JazzStep = co.loaded<typeof JazzStep>;
 

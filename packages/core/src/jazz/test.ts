@@ -68,7 +68,7 @@ async function main() {
 
   // await world.webhooks.dispose('webhook1', 'jazz');
 
-  const completedEvent = await world.events.create('run1', {
+  await world.events.create('run1', {
     eventType: 'step_completed',
     correlationId: '1',
     eventData: {
@@ -76,7 +76,7 @@ async function main() {
     },
   });
 
-  const failedEvent = await world.events.create('run1', {
+  await world.events.create('run1', {
     eventType: 'step_failed',
     correlationId: '1',
     eventData: {

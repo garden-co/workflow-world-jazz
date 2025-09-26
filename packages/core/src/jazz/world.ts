@@ -1,9 +1,10 @@
 import { startWorker } from 'jazz-tools/worker';
-import type { AuthProvider, World } from '../world/interfaces.js';
+import type { AuthProvider, Storage } from '../world/interfaces.js';
 import { createStorage } from './storage.js';
 import { JazzStorageAccount } from './types.js';
 
-interface JazzWorld extends World {
+// interface JazzWorld extends World {
+interface JazzWorld extends Storage {
   done(): Promise<void>;
 }
 
