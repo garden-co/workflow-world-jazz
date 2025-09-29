@@ -54,7 +54,7 @@ export type JazzWebhook = co.loaded<typeof JazzWebhook>;
 
 export const JazzStorageRoot = co.map({
   runs: co.list(JazzWorkflowRun),
-  steps: co.record(z.string(), co.list(JazzStep)),
+  steps: co.record(z.string(), co.record(z.string(), JazzStep)),
   events: co.record(z.string(), co.list(JazzEvent)),
   webhooks: co.record(z.string(), JazzWebhook),
 });
@@ -71,7 +71,7 @@ export const JazzStorageAccount = co
       const defaultGroup = Group.create();
       const runs = co.list(JazzWorkflowRun).create([], { owner: defaultGroup });
       const steps = co
-        .record(z.string(), co.list(JazzStep))
+        .record(z.string(), co.record(z.string(), JazzStep))
         .create({}, { owner: defaultGroup });
       const events = co
         .record(z.string(), co.list(JazzEvent))

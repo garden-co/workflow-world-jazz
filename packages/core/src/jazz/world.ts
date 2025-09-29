@@ -18,12 +18,23 @@ export function createJazzWorld(): JazzWorld {
     return worker;
   })();
 
+  const rootPromise = (async () => {
+    const worker = await workerPromise;
+    return (
+      await worker.$jazz.ensureLoaded({
+        resolve: {
+          root: true,
+        },
+      })
+    ).root;
+  })();
+
   return {
     ...authImpl,
-    ...createStorage(workerPromise),
+    ...createStorage(rootPromise),
     done: async () => {
-      const worker = await workerPromise;
-      await worker.$jazz.waitForAllCoValuesSync();
+      const root = await workerPromise;
+      await root.$jazz.waitForAllCoValuesSync();
     },
   };
 }

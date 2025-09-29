@@ -11,12 +11,23 @@ import { Webhook } from '../world/webhooks.js';
 describe('JazzStorage', () => {
   let storage: Storage;
 
-  beforeEach(async () => {
-    const workerPromise = createJazzTestAccount({
+  async function newStorage(): Promise<Storage> {
+    const worker = await createJazzTestAccount({
       isCurrentActiveAccount: true,
       AccountSchema: JazzStorageAccount,
     });
-    storage = createStorage(workerPromise);
+    const rootPromise = (
+      await worker.$jazz.ensureLoaded({
+        resolve: {
+          root: true,
+        },
+      })
+    ).root;
+    return createStorage(Promise.resolve(rootPromise));
+  }
+
+  beforeEach(async () => {
+    storage = await newStorage();
   });
 
   describe('runs', () => {
@@ -371,11 +382,7 @@ describe('JazzStorage', () => {
 
       it('should return empty result when no runs exist', async () => {
         // Create a fresh storage instance
-        const freshWorkerPromise = createJazzTestAccount({
-          isCurrentActiveAccount: true,
-          AccountSchema: JazzStorageAccount,
-        });
-        const freshStorage = createStorage(freshWorkerPromise);
+        const freshStorage = await newStorage();
 
         const result = await freshStorage.runs.list();
 
