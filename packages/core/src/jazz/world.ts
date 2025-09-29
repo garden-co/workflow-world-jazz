@@ -9,22 +9,12 @@ interface JazzWorld extends Storage {
 }
 
 export function createJazzWorld(): JazzWorld {
-  // TODO: this will become simpler once createJazzWorld can be async
   const workerPromise = (async () => {
     const { worker } = await startWorker({
       // syncServer: `wss://cloud.jazz.tools/?key=${process.env.JAZZ_API_KEY}`,
       syncServer: 'http://localhost:4201',
       AccountSchema: JazzStorageAccount,
     });
-
-    await worker.$jazz.ensureLoaded({
-      resolve: {
-        root: {
-          runs: true,
-        },
-      },
-    });
-
     return worker;
   })();
 

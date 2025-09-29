@@ -130,11 +130,11 @@ export const createStorage = (
         },
       });
 
-      const runsArray = Array.from(worker.root!.runs!).filter(
+      const eligibleRuns = Array.from(worker.root!.runs!).filter(
         (jwr): jwr is JazzWorkflowRun => jwr !== null
       );
       return paginateItems({
-        items: runsArray,
+        items: eligibleRuns,
         cursor: params?.pagination?.cursor,
         limit: params?.pagination?.limit,
         findCursorIndex: (items, cursor) =>
