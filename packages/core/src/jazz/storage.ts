@@ -1,7 +1,7 @@
 import { co } from 'jazz-tools';
-import { JSONSchema7 } from 'json-schema';
+import type { JSONSchema7 } from 'json-schema';
 import { z } from 'zod';
-import {
+import type {
   CreateEventRequest,
   Event,
   ListEventsParams,
@@ -9,18 +9,18 @@ import {
 import type { Storage } from '../world/interfaces.js';
 import type {
   CreateWorkflowRunRequest,
+  ListWorkflowRunsParams,
   UpdateWorkflowRunRequest,
   WorkflowRun,
 } from '../world/runs.js';
-import { ListWorkflowRunsParams } from '../world/runs.js';
-import { PaginatedResponse } from '../world/shared.js';
-import {
+import type { PaginatedResponse } from '../world/shared.js';
+import type {
   CreateStepRequest,
   ListWorkflowRunStepsParams,
   Step,
   UpdateStepRequest,
 } from '../world/steps.js';
-import {
+import type {
   CreateWebhookRequest,
   ListWebhooksByUrlParams,
   Webhook,
@@ -28,7 +28,7 @@ import {
 import {
   JazzEvent,
   JazzStep,
-  JazzStorageRoot,
+  type JazzStorageRoot,
   JazzWebhook,
   JazzWorkflowRun,
 } from './types.js';
@@ -239,9 +239,9 @@ export const createStorage = (
           .catch(() => {
             throw new Error(`Steps for run ${runId} not found`);
           })
-      ).steps[runId]!;
+      ).steps[runId];
 
-      const js = steps[stepId];
+      const js = steps?.[stepId];
       if (!js) {
         throw new Error(`Step ${stepId} in run ${runId} not found`);
       }
@@ -270,9 +270,9 @@ export const createStorage = (
           .catch(() => {
             throw new Error(`Steps for run ${runId} not found`);
           })
-      ).steps[runId]!;
+      ).steps[runId];
 
-      const js = steps[stepId];
+      const js = steps?.[stepId];
       if (!js) {
         throw new Error(`Step ${stepId} in run ${runId} not found`);
       }
@@ -327,7 +327,15 @@ export const createStorage = (
               },
             };
           })
-      ).steps[params.runId]!;
+      ).steps[params.runId];
+
+      if (!steps) {
+        return {
+          data: [],
+          hasMore: false,
+          cursor: null,
+        };
+      }
 
       const eligibleSteps = Object.values(steps).filter((js) => js !== null);
       return paginateItems({
@@ -358,6 +366,7 @@ export const createStorage = (
       const je: JazzEvent = JazzEvent.create({
         runId,
         createdAt: now,
+        // biome-ignore lint/suspicious/noExplicitAny: discriminatedUnion difficulties
         ...(data as any),
       });
 
@@ -393,7 +402,15 @@ export const createStorage = (
               },
             };
           })
-      ).events[params.runId]!;
+      ).events[params.runId];
+
+      if (!events) {
+        return {
+          data: [],
+          hasMore: false,
+          cursor: null,
+        };
+      }
 
       const eligibleEvents = Object.values(events).filter((js) => js !== null);
       return paginateItems({
@@ -431,9 +448,9 @@ export const createStorage = (
         createdAt: now,
         updatedAt: now,
         url: data.url,
-        searchParamsSchema: data.searchParamsSchema as any,
-        headersSchema: data.headersSchema as any,
-        bodySchema: data.bodySchema as any,
+        searchParamsSchema: data.searchParamsSchema as z.core.util.JSONType,
+        headersSchema: data.headersSchema as z.core.util.JSONType,
+        bodySchema: data.bodySchema as z.core.util.JSONType,
       });
       webhooks.$jazz.set(data.webhookId, jw);
 
@@ -491,8 +508,7 @@ export const createStorage = (
           console.warn(`Webhook ${id} is undefined`);
           continue;
         }
-
-        if (jw!.url === url) {
+        if (jw.url === url) {
           eligibleWebhooks.push(jw);
         }
       }

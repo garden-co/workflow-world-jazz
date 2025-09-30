@@ -1,12 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vitest';
 import { createJazzTestAccount } from 'jazz-tools/testing';
-import { JazzStorageAccount } from './types.js';
+import type { JSONSchema7 } from 'json-schema';
+import { beforeEach, describe, expect, it } from 'vitest';
+import type { Storage } from '../world/interfaces.js';
+import type { WorkflowRun } from '../world/runs.js';
+import type { Step } from '../world/steps.js';
 import { createStorage } from './storage.js';
-import { Storage } from '../world/interfaces.js';
-import { WorkflowRun } from '../world/runs.js';
-import { Step } from '../world/steps.js';
-import { Event } from '../world/events.js';
-import { Webhook } from '../world/webhooks.js';
+import { JazzStorageAccount } from './types.js';
 
 describe('JazzStorage', () => {
   let storage: Storage;
@@ -356,7 +355,7 @@ describe('JazzStorage', () => {
         const secondPage = await storage.runs.list({
           pagination: {
             limit: 2,
-            cursor: firstPage.cursor!,
+            cursor: firstPage.cursor ?? undefined,
           },
         });
 
@@ -907,7 +906,7 @@ describe('JazzStorage', () => {
           runId: testRunId,
           pagination: {
             limit: 2,
-            cursor: firstPage.cursor!,
+            cursor: firstPage.cursor ?? undefined,
           },
         });
 
@@ -1304,6 +1303,7 @@ describe('JazzStorage', () => {
 
         const result = await storage.events.create(testRunId, createRequest);
 
+        // biome-ignore lint/suspicious/noExplicitAny: discriminatedUnion difficulties
         expect((result as any).eventData).toEqual(complexEventData);
       });
     });
@@ -1381,7 +1381,7 @@ describe('JazzStorage', () => {
           runId: testRunId,
           pagination: {
             limit: 3,
-            cursor: firstPage.cursor!,
+            cursor: firstPage.cursor ?? undefined,
           },
         });
 
@@ -1568,11 +1568,11 @@ describe('JazzStorage', () => {
           searchParamsSchema: {
             id: { type: 'string' },
             token: { type: 'string' },
-          } as any,
+          } as Record<string, JSONSchema7>,
           headersSchema: {
             'Content-Type': { type: 'string' },
             Authorization: { type: 'string' },
-          } as any,
+          } as Record<string, JSONSchema7>,
           bodySchema: {
             type: 'object',
             properties: {
@@ -1580,7 +1580,7 @@ describe('JazzStorage', () => {
               timestamp: { type: 'number' },
             },
             required: ['data'],
-          } as any,
+          } as JSONSchema7,
         };
 
         const result = await storage.webhooks.create(testRunId, createRequest);
@@ -1687,7 +1687,7 @@ describe('JazzStorage', () => {
             },
           },
           required: ['user'],
-        } as any;
+        } as JSONSchema7;
 
         const createRequest = {
           webhookId: 'webhook-complex',
@@ -1733,18 +1733,18 @@ describe('JazzStorage', () => {
           searchParamsSchema: {
             version: { type: 'string' },
             format: { type: 'string', enum: ['json', 'xml'] },
-          } as any,
+          } as Record<string, JSONSchema7>,
           headersSchema: {
             'X-API-Key': { type: 'string' },
             'X-Client-Version': { type: 'string' },
-          } as any,
+          } as Record<string, JSONSchema7>,
           bodySchema: {
             type: 'object',
             properties: {
               action: { type: 'string' },
               payload: { type: 'object' },
             },
-          } as any,
+          } as JSONSchema7,
         };
 
         const created = await storage.webhooks.create(testRunId, createRequest);

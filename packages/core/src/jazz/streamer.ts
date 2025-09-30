@@ -1,6 +1,6 @@
-import { co, FileStream } from 'jazz-tools';
+import { co, type FileStream } from 'jazz-tools';
 import type { Streamer } from '../world/interfaces.js';
-import { JazzStorageRoot } from './types.js';
+import type { JazzStorageRoot } from './types.js';
 
 export const createStreamer = (
   rootPromise: Promise<JazzStorageRoot>
@@ -39,6 +39,7 @@ export const createStreamer = (
   },
 
   async closeStream(name: string) {
+    // biome-ignore lint/style/noNonNullAssertion: ensureLoaded throws if the stream is not found
     const stream = (
       await (
         await rootPromise
@@ -60,8 +61,9 @@ export const createStreamer = (
 
   async readFromStream(
     name: string,
-    startIndex: number = 0
+    startIndex = 0
   ): Promise<ReadableStream<Uint8Array>> {
+    // biome-ignore lint/style/noNonNullAssertion: ensureLoaded throws if the stream is not found
     const stream = (
       await (
         await rootPromise
