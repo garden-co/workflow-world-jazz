@@ -28,7 +28,7 @@ export const createStreamer = (
 
     let fileStream = streams[name];
     if (!fileStream) {
-      fileStream = co.fileStream().create({ owner: streams.$jazz.owner });
+      fileStream = co.fileStream().create();
       fileStream.start({
         mimeType: 'application/octet-stream',
       });

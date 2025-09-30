@@ -214,9 +214,7 @@ export const createStorage = (
 
       let steps = stepsByRunId[runId];
       if (!steps) {
-        steps = co
-          .record(z.string(), JazzStep)
-          .create({}, { owner: stepsByRunId.$jazz.owner });
+        steps = co.record(z.string(), JazzStep).create({});
         stepsByRunId.$jazz.set(runId, steps);
       }
       steps.$jazz.set(data.stepId, js);
@@ -365,9 +363,7 @@ export const createStorage = (
 
       let events = eventsByRunId[runId];
       if (!events) {
-        events = co
-          .list(JazzEvent)
-          .create([], { owner: eventsByRunId.$jazz.owner });
+        events = co.list(JazzEvent).create([]);
         eventsByRunId.$jazz.set(runId, events);
       }
       events.$jazz.push(je);
