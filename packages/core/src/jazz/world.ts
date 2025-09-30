@@ -1,10 +1,11 @@
 import { startWorker } from 'jazz-tools/worker';
-import type { AuthProvider, Storage } from '../world/interfaces.js';
+import type { AuthProvider, Storage, Streamer } from '../world/interfaces.js';
 import { createStorage } from './storage.js';
+import { createStreamer } from './streamer.js';
 import { JazzStorageAccount } from './types.js';
 
 // interface JazzWorld extends World {
-interface JazzWorld extends Storage {
+interface JazzWorld extends Storage, Streamer {
   done(): Promise<void>;
 }
 
@@ -32,9 +33,10 @@ export function createJazzWorld(): JazzWorld {
   return {
     ...authImpl,
     ...createStorage(rootPromise),
+    ...createStreamer(rootPromise),
     done: async () => {
-      const root = await workerPromise;
-      await root.$jazz.waitForAllCoValuesSync();
+      const worker = await workerPromise;
+      await worker.$jazz.waitForAllCoValuesSync();
     },
   };
 }

@@ -57,6 +57,7 @@ export const JazzStorageRoot = co.map({
   steps: co.record(z.string(), co.record(z.string(), JazzStep)),
   events: co.record(z.string(), co.list(JazzEvent)),
   webhooks: co.record(z.string(), JazzWebhook),
+  streams: co.record(z.string(), co.fileStream()),
 });
 
 export type JazzStorageRoot = co.loaded<typeof JazzStorageRoot>;
@@ -79,11 +80,15 @@ export const JazzStorageAccount = co
       const webhooks = co
         .record(z.string(), JazzWebhook)
         .create({}, { owner: defaultGroup });
+      const streams = co
+        .record(z.string(), co.fileStream())
+        .create({}, { owner: defaultGroup });
       account.$jazz.set('root', {
         runs,
         events,
         steps,
         webhooks,
+        streams,
       });
     }
   });
