@@ -1,24 +1,13 @@
-import { createJazzTestAccount } from 'jazz-tools/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { Streamer } from '../world/interfaces.js';
 import { createStreamer } from './streamer.js';
-import {
-  JazzStorageAccount,
-  type JazzStorageAccountResolver,
-} from './types.js';
+import { createJazzTestAccountResolver } from './testUtils.js';
 
-describe('streamer', () => {
+describe('Jazz Streamer', () => {
   let streamer: Streamer;
 
   async function newStreamer(): Promise<Streamer> {
-    const workerPromise = createJazzTestAccount({
-      isCurrentActiveAccount: true,
-      AccountSchema: JazzStorageAccount,
-    });
-    const ensureLoaded: JazzStorageAccountResolver = async (resolve) => {
-      const worker = await workerPromise;
-      return worker.$jazz.ensureLoaded({ resolve });
-    };
+    const ensureLoaded = createJazzTestAccountResolver();
     return createStreamer(ensureLoaded);
   }
 

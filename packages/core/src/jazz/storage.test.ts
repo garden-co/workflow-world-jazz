@@ -1,27 +1,16 @@
-import { createJazzTestAccount } from 'jazz-tools/testing';
 import type { JSONSchema7 } from 'json-schema';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { Storage } from '../world/interfaces.js';
 import type { WorkflowRun } from '../world/runs.js';
 import type { Step } from '../world/steps.js';
 import { createStorage } from './storage.js';
-import {
-  JazzStorageAccount,
-  type JazzStorageAccountResolver,
-} from './types.js';
+import { createJazzTestAccountResolver } from './testUtils.js';
 
-describe('JazzStorage', () => {
+describe('Jazz Storage', () => {
   let storage: Storage;
 
   async function newStorage(): Promise<Storage> {
-    const workerPromise = createJazzTestAccount({
-      isCurrentActiveAccount: true,
-      AccountSchema: JazzStorageAccount,
-    });
-    const ensureLoaded: JazzStorageAccountResolver = async (resolve) => {
-      const worker = await workerPromise;
-      return worker.$jazz.ensureLoaded({ resolve });
-    };
+    const ensureLoaded = createJazzTestAccountResolver();
     return createStorage(ensureLoaded);
   }
 

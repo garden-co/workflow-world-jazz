@@ -16,8 +16,7 @@ interface JazzWorld extends Storage, Streamer {
 export function createJazzWorld(): JazzWorld {
   const workerPromise = (async () => {
     const { worker } = await startWorker({
-      // syncServer: `wss://cloud.jazz.tools/?key=${process.env.JAZZ_API_KEY}`,
-      syncServer: 'http://localhost:4201',
+      syncServer: `wss://cloud.jazz.tools/?key=${process.env.JAZZ_API_KEY}`,
       AccountSchema: JazzStorageAccount,
     });
     return worker;
