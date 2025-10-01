@@ -14,6 +14,22 @@ export const createStreamer = (
       })
     ).root.streams;
 
+    // biome-ignore lint/style/noNonNullAssertion: ensureLoaded throws if the stream is not found
+    const fileStream = (
+      await streams.$jazz
+        .ensureLoaded({
+          resolve: {
+            [name]: true,
+          },
+        })
+        .catch(() => {
+          const fs = co.fileStream().create();
+          fs.start({ mimeType: 'application/octet-stream' });
+          streams.$jazz.set(name, fs);
+          return { [name]: fs };
+        })
+    )[name]!;
+
     // Convert chunk to Uint8Array if needed
     let chunkData: Uint8Array;
     if (typeof chunk === 'string') {
@@ -22,15 +38,6 @@ export const createStreamer = (
       chunkData = new Uint8Array(chunk);
     } else {
       chunkData = chunk;
-    }
-
-    let fileStream = streams[name];
-    if (!fileStream) {
-      fileStream = co.fileStream().create();
-      fileStream.start({
-        mimeType: 'application/octet-stream',
-      });
-      streams.$jazz.set(name, fileStream);
     }
 
     fileStream.push(chunkData);
