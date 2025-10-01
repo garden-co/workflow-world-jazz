@@ -5,24 +5,24 @@ import type { Storage } from '../world/interfaces.js';
 import type { WorkflowRun } from '../world/runs.js';
 import type { Step } from '../world/steps.js';
 import { createStorage } from './storage.js';
-import { JazzStorageAccount } from './types.js';
+import {
+  JazzStorageAccount,
+  type JazzStorageAccountResolver,
+} from './types.js';
 
 describe('JazzStorage', () => {
   let storage: Storage;
 
   async function newStorage(): Promise<Storage> {
-    const worker = await createJazzTestAccount({
+    const workerPromise = createJazzTestAccount({
       isCurrentActiveAccount: true,
       AccountSchema: JazzStorageAccount,
     });
-    const rootPromise = (
-      await worker.$jazz.ensureLoaded({
-        resolve: {
-          root: true,
-        },
-      })
-    ).root;
-    return createStorage(Promise.resolve(rootPromise));
+    const ensureLoaded: JazzStorageAccountResolver = async (resolve) => {
+      const worker = await workerPromise;
+      return worker.$jazz.ensureLoaded({ resolve });
+    };
+    return createStorage(ensureLoaded);
   }
 
   beforeEach(async () => {
@@ -1437,17 +1437,17 @@ describe('JazzStorage', () => {
     describe('integration scenarios', () => {
       it('should handle complete workflow event sequence', async () => {
         // Workflow starts
-        const workflowStarted = await storage.events.create(testRunId, {
+        await storage.events.create(testRunId, {
           eventType: 'workflow_started',
         });
 
         // Step 1 starts and completes
-        const step1Started = await storage.events.create(testRunId, {
+        const _step1Started = await storage.events.create(testRunId, {
           eventType: 'step_started',
           correlationId: 'step-1',
         });
 
-        const step1Completed = await storage.events.create(testRunId, {
+        const _step1Completed = await storage.events.create(testRunId, {
           eventType: 'step_completed',
           correlationId: 'step-1',
           eventData: {
@@ -1456,12 +1456,12 @@ describe('JazzStorage', () => {
         });
 
         // Step 2 starts and fails
-        const step2Started = await storage.events.create(testRunId, {
+        const _step2Started = await storage.events.create(testRunId, {
           eventType: 'step_started',
           correlationId: 'step-2',
         });
 
-        const step2Failed = await storage.events.create(testRunId, {
+        const _step2Failed = await storage.events.create(testRunId, {
           eventType: 'step_failed',
           correlationId: 'step-2',
           eventData: {
@@ -1471,7 +1471,7 @@ describe('JazzStorage', () => {
         });
 
         // Workflow fails
-        const workflowFailed = await storage.events.create(testRunId, {
+        const _workflowFailed = await storage.events.create(testRunId, {
           eventType: 'workflow_failed',
           eventData: {
             error: { message: 'Workflow failed due to step 2' },
@@ -1896,7 +1896,7 @@ describe('JazzStorage', () => {
           allowedMethods: ['POST'],
         });
 
-        const webhook2 = await storage.webhooks.create(testRunId, {
+        const _webhook2 = await storage.webhooks.create(testRunId, {
           webhookId: 'webhook-dispose-2',
           url: 'https://example.com/dispose-test',
           allowedMethods: ['GET'],

@@ -1,4 +1,11 @@
-import { co, Group, z } from 'jazz-tools';
+import {
+  co,
+  Group,
+  type RefsToResolve,
+  type RefsToResolveStrict,
+  type Resolved,
+  z,
+} from 'jazz-tools';
 import { EventTypeSchema } from '../world/events.js';
 import { WorkflowRunSchema } from '../world/runs.js';
 import { StepSchema } from '../world/steps.js';
@@ -92,3 +99,11 @@ export const JazzStorageAccount = co
       });
     }
   });
+
+export type JazzStorageAccount = co.loaded<typeof JazzStorageAccount>;
+
+export type JazzStorageAccountResolver = <
+  const R extends RefsToResolve<JazzStorageAccount>,
+>(
+  resolve: RefsToResolveStrict<JazzStorageAccount, R>
+) => Promise<Resolved<JazzStorageAccount, R>>;

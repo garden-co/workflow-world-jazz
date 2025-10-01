@@ -1,8 +1,12 @@
+import { RefsToResolve, RefsToResolveStrict, Resolved } from 'jazz-tools';
 import { startWorker } from 'jazz-tools/worker';
 import type { AuthProvider, Storage, Streamer } from '../world/interfaces.js';
 import { createStorage } from './storage.js';
 import { createStreamer } from './streamer.js';
-import { JazzStorageAccount } from './types.js';
+import {
+  JazzStorageAccount,
+  type JazzStorageAccountResolver,
+} from './types.js';
 
 // interface JazzWorld extends World {
 interface JazzWorld extends Storage, Streamer {
@@ -19,21 +23,15 @@ export function createJazzWorld(): JazzWorld {
     return worker;
   })();
 
-  const rootPromise = (async () => {
+  const ensureLoaded: JazzStorageAccountResolver = async (resolve) => {
     const worker = await workerPromise;
-    return (
-      await worker.$jazz.ensureLoaded({
-        resolve: {
-          root: true,
-        },
-      })
-    ).root;
-  })();
+    return worker.$jazz.ensureLoaded({ resolve });
+  };
 
   return {
     ...authImpl,
-    ...createStorage(rootPromise),
-    ...createStreamer(rootPromise),
+    ...createStorage(ensureLoaded),
+    ...createStreamer(ensureLoaded),
     done: async () => {
       const worker = await workerPromise;
       await worker.$jazz.waitForAllCoValuesSync();

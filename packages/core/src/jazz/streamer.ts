@@ -1,20 +1,18 @@
 import { co, type FileStream } from 'jazz-tools';
 import type { Streamer } from '../world/interfaces.js';
-import type { JazzStorageRoot } from './types.js';
+import type { JazzStorageAccountResolver } from './types.js';
 
 export const createStreamer = (
-  rootPromise: Promise<JazzStorageRoot>
+  ensureLoaded: JazzStorageAccountResolver
 ): Streamer => ({
   async writeToStream(name: string, chunk: string | Uint8Array | Buffer) {
     const streams = (
-      await (
-        await rootPromise
-      ).$jazz.ensureLoaded({
-        resolve: {
+      await ensureLoaded({
+        root: {
           streams: true,
         },
       })
-    ).streams;
+    ).root.streams;
 
     // Convert chunk to Uint8Array if needed
     let chunkData: Uint8Array;
@@ -41,20 +39,16 @@ export const createStreamer = (
   async closeStream(name: string) {
     // biome-ignore lint/style/noNonNullAssertion: ensureLoaded throws if the stream is not found
     const stream = (
-      await (
-        await rootPromise
-      ).$jazz
-        .ensureLoaded({
-          resolve: {
-            streams: {
-              [name]: true,
-            },
+      await ensureLoaded({
+        root: {
+          streams: {
+            [name]: true,
           },
-        })
-        .catch(() => {
-          throw new Error(`Stream ${name} not found`);
-        })
-    ).streams[name]!;
+        },
+      }).catch((error) => {
+        throw new Error(`Stream ${name} not found`, { cause: error });
+      })
+    ).root.streams[name]!;
 
     stream.end();
   },
@@ -65,20 +59,16 @@ export const createStreamer = (
   ): Promise<ReadableStream<Uint8Array>> {
     // biome-ignore lint/style/noNonNullAssertion: ensureLoaded throws if the stream is not found
     const stream = (
-      await (
-        await rootPromise
-      ).$jazz
-        .ensureLoaded({
-          resolve: {
-            streams: {
-              [name]: true,
-            },
+      await ensureLoaded({
+        root: {
+          streams: {
+            [name]: true,
           },
-        })
-        .catch(() => {
-          throw new Error(`Stream ${name} not found`);
-        })
-    ).streams[name]!;
+        },
+      }).catch((error) => {
+        throw new Error(`Stream ${name} not found`, { cause: error });
+      })
+    ).root.streams[name]!;
 
     let unsubscribe: () => void;
 

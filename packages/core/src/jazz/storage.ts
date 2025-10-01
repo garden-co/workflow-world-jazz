@@ -28,25 +28,23 @@ import type {
 import {
   JazzEvent,
   JazzStep,
-  type JazzStorageRoot,
+  type JazzStorageAccountResolver,
   JazzWebhook,
   JazzWorkflowRun,
 } from './types.js';
 
 export const createStorage = (
-  rootPromise: Promise<JazzStorageRoot>
+  ensureLoaded: JazzStorageAccountResolver
 ): Storage => ({
   runs: {
     async create(data: CreateWorkflowRunRequest): Promise<WorkflowRun> {
       const runs = (
-        await (
-          await rootPromise
-        ).$jazz.ensureLoaded({
-          resolve: {
+        await ensureLoaded({
+          root: {
             runs: true,
           },
         })
-      ).runs;
+      ).root.runs;
 
       const now = new Date();
       const jwr = JazzWorkflowRun.create({
@@ -67,7 +65,7 @@ export const createStorage = (
 
     async get(id: string): Promise<WorkflowRun> {
       // Needed because World creation is synchronous
-      await rootPromise;
+      await ensureLoaded({});
 
       const jwr = await JazzWorkflowRun.load(id, {
         resolve: {
@@ -86,7 +84,7 @@ export const createStorage = (
       data: UpdateWorkflowRunRequest
     ): Promise<WorkflowRun> {
       // Needed because World creation is synchronous
-      await rootPromise;
+      await ensureLoaded({});
 
       const jwr = await JazzWorkflowRun.load(id, {
         resolve: {
@@ -137,10 +135,8 @@ export const createStorage = (
       params?: ListWorkflowRunsParams
     ): Promise<PaginatedResponse<WorkflowRun>> {
       const runs = (
-        await (
-          await rootPromise
-        ).$jazz.ensureLoaded({
-          resolve: {
+        await ensureLoaded({
+          root: {
             runs: {
               $each: {
                 executionContext: true,
@@ -148,7 +144,7 @@ export const createStorage = (
             },
           },
         })
-      ).runs;
+      ).root.runs;
 
       const eligibleRuns = Array.from(runs).filter((jwr) => jwr !== null);
       return paginateItems({
@@ -192,14 +188,12 @@ export const createStorage = (
   steps: {
     async create(runId: string, data: CreateStepRequest): Promise<Step> {
       const stepsByRunId = (
-        await (
-          await rootPromise
-        ).$jazz.ensureLoaded({
-          resolve: {
+        await ensureLoaded({
+          root: {
             steps: true,
           },
         })
-      ).steps;
+      ).root.steps;
 
       const now = new Date();
       const js = JazzStep.create({
@@ -224,22 +218,20 @@ export const createStorage = (
 
     async get(runId: string, stepId: string): Promise<Step> {
       const steps = (
-        await (
-          await rootPromise
-        ).$jazz
-          .ensureLoaded({
-            resolve: {
-              steps: {
-                [runId]: {
-                  $each: true,
-                },
+        await ensureLoaded({
+          root: {
+            steps: {
+              [runId]: {
+                $each: true,
               },
             },
-          })
-          .catch(() => {
-            throw new Error(`Steps for run ${runId} not found`);
-          })
-      ).steps[runId];
+          },
+        }).catch((error) => {
+          throw new Error(`Steps for run ${runId} not found`, {
+            cause: error,
+          });
+        })
+      ).root.steps[runId];
 
       const js = steps?.[stepId];
       if (!js) {
@@ -255,22 +247,20 @@ export const createStorage = (
       data: UpdateStepRequest
     ): Promise<Step> {
       const steps = (
-        await (
-          await rootPromise
-        ).$jazz
-          .ensureLoaded({
-            resolve: {
-              steps: {
-                [runId]: {
-                  $each: true,
-                },
+        await ensureLoaded({
+          root: {
+            steps: {
+              [runId]: {
+                $each: true,
               },
             },
-          })
-          .catch(() => {
-            throw new Error(`Steps for run ${runId} not found`);
-          })
-      ).steps[runId];
+          },
+        }).catch((error) => {
+          throw new Error(`Steps for run ${runId} not found`, {
+            cause: error,
+          });
+        })
+      ).root.steps[runId];
 
       const js = steps?.[stepId];
       if (!js) {
@@ -307,27 +297,25 @@ export const createStorage = (
       params: ListWorkflowRunStepsParams
     ): Promise<PaginatedResponse<Step>> {
       const steps = (
-        await (
-          await rootPromise
-        ).$jazz
-          .ensureLoaded({
-            resolve: {
-              steps: {
-                [params.runId]: {
-                  $each: true,
-                },
+        await ensureLoaded({
+          root: {
+            steps: {
+              [params.runId]: {
+                $each: true,
               },
             },
-          })
-          .catch(() => {
-            // Return empty steps for run
-            return {
+          },
+        }).catch(() => {
+          // Return empty steps for run
+          return {
+            root: {
               steps: {
                 [params.runId]: {},
               },
-            };
-          })
-      ).steps[params.runId];
+            },
+          };
+        })
+      ).root.steps[params.runId];
 
       if (!steps) {
         return {
@@ -353,14 +341,12 @@ export const createStorage = (
   events: {
     async create(runId: string, data: CreateEventRequest): Promise<Event> {
       const eventsByRunId = (
-        await (
-          await rootPromise
-        ).$jazz.ensureLoaded({
-          resolve: {
+        await ensureLoaded({
+          root: {
             events: true,
           },
         })
-      ).events;
+      ).root.events;
 
       const now = new Date();
       const je: JazzEvent = JazzEvent.create({
@@ -382,27 +368,25 @@ export const createStorage = (
 
     async list(params: ListEventsParams): Promise<PaginatedResponse<Event>> {
       const events = (
-        await (
-          await rootPromise
-        ).$jazz
-          .ensureLoaded({
-            resolve: {
-              events: {
-                [params.runId]: {
-                  $each: true,
-                },
+        await ensureLoaded({
+          root: {
+            events: {
+              [params.runId]: {
+                $each: true,
               },
             },
-          })
-          .catch(() => {
-            // Return empty events for run
-            return {
+          },
+        }).catch(() => {
+          // Return empty events for run
+          return {
+            root: {
               events: {
                 [params.runId]: {},
               },
-            };
-          })
-      ).events[params.runId];
+            },
+          };
+        })
+      ).root.events[params.runId];
 
       if (!events) {
         return {
@@ -428,14 +412,12 @@ export const createStorage = (
   webhooks: {
     async create(runId: string, data: CreateWebhookRequest): Promise<Webhook> {
       const webhooks = (
-        await (
-          await rootPromise
-        ).$jazz.ensureLoaded({
-          resolve: {
+        await ensureLoaded({
+          root: {
             webhooks: true,
           },
         })
-      ).webhooks;
+      ).root.webhooks;
 
       const now = new Date();
       const jw = JazzWebhook.create({
@@ -459,16 +441,14 @@ export const createStorage = (
 
     async get(webhookId: string, _deploymentId: string): Promise<Webhook> {
       const webhooks = (
-        await (
-          await rootPromise
-        ).$jazz.ensureLoaded({
-          resolve: {
+        await ensureLoaded({
+          root: {
             webhooks: {
               [webhookId]: true,
             },
           },
         })
-      ).webhooks;
+      ).root.webhooks;
 
       const jw = webhooks[webhookId];
       if (!jw) {
@@ -484,26 +464,25 @@ export const createStorage = (
       params?: ListWebhooksByUrlParams
     ): Promise<PaginatedResponse<Webhook>> {
       const webhooks = (
-        await (
-          await rootPromise
-        ).$jazz.ensureLoaded({
-          resolve: {
+        await ensureLoaded({
+          root: {
             webhooks: true,
           },
         })
-      ).webhooks;
+      ).root.webhooks;
 
       const eligibleWebhooks: JazzWebhook[] = [];
 
       const ids = Object.keys(webhooks);
       for (const id of ids) {
-        await webhooks.$jazz.ensureLoaded({
-          resolve: {
-            [id]: true,
-          },
-        });
+        const jw = (
+          await webhooks.$jazz.ensureLoaded({
+            resolve: {
+              [id]: true,
+            },
+          })
+        )[id];
 
-        const jw = webhooks[id];
         if (!jw) {
           console.warn(`Webhook ${id} is undefined`);
           continue;
@@ -523,14 +502,12 @@ export const createStorage = (
 
     async dispose(webhookId: string, _deploymentId: string): Promise<Webhook> {
       const webhooks = (
-        await (
-          await rootPromise
-        ).$jazz.ensureLoaded({
-          resolve: {
+        await ensureLoaded({
+          root: {
             webhooks: true,
           },
         })
-      ).webhooks;
+      ).root.webhooks;
 
       try {
         await webhooks.$jazz.ensureLoaded({
@@ -539,7 +516,7 @@ export const createStorage = (
           },
         });
       } catch (error) {
-        throw new Error(`Webhook ${webhookId} not found`);
+        throw new Error(`Webhook ${webhookId} not found`, { cause: error });
       }
 
       const jw = webhooks[webhookId];
