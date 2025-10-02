@@ -1,30 +1,24 @@
+import type {
+  CreateEventRequest,
+  CreateStepRequest,
+  CreateWebhookRequest,
+  CreateWorkflowRunRequest,
+  Event,
+  ListEventsParams,
+  ListWebhooksByUrlParams,
+  ListWorkflowRunStepsParams,
+  ListWorkflowRunsParams,
+  PaginatedResponse,
+  Step,
+  Storage,
+  UpdateStepRequest,
+  UpdateWorkflowRunRequest,
+  Webhook,
+  WorkflowRun,
+} from '@vercel/workflow-world';
 import { co } from 'jazz-tools';
 import type { JSONSchema7 } from 'json-schema';
 import { z } from 'zod';
-import type {
-  CreateEventRequest,
-  Event,
-  ListEventsParams,
-} from '../world/events.js';
-import type { Storage } from '../world/interfaces.js';
-import type {
-  CreateWorkflowRunRequest,
-  ListWorkflowRunsParams,
-  UpdateWorkflowRunRequest,
-  WorkflowRun,
-} from '../world/runs.js';
-import type { PaginatedResponse } from '../world/shared.js';
-import type {
-  CreateStepRequest,
-  ListWorkflowRunStepsParams,
-  Step,
-  UpdateStepRequest,
-} from '../world/steps.js';
-import type {
-  CreateWebhookRequest,
-  ListWebhooksByUrlParams,
-  Webhook,
-} from '../world/webhooks.js';
 import {
   JazzEvent,
   JazzStep,

@@ -1,8 +1,6 @@
+import type { Step, Storage, WorkflowRun } from '@vercel/workflow-world';
 import type { JSONSchema7 } from 'json-schema';
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { Storage } from '../world/interfaces.js';
-import type { WorkflowRun } from '../world/runs.js';
-import type { Step } from '../world/steps.js';
 import { createStorage } from './storage.js';
 import { createJazzTestAccountResolver } from './testUtils.js';
 

@@ -1,5 +1,5 @@
+import type { Streamer } from '@vercel/workflow-world';
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { Streamer } from '../world/interfaces.js';
 import { createStreamer } from './streamer.js';
 import { createJazzTestAccountResolver } from './testUtils.js';
 

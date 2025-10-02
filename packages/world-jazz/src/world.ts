@@ -1,5 +1,5 @@
+import type { AuthProvider, Storage, Streamer } from '@vercel/workflow-world';
 import { startWorker } from 'jazz-tools/worker';
-import type { AuthProvider, Storage, Streamer } from '../world/interfaces.js';
 import { createStorage } from './storage.js';
 import { createStreamer } from './streamer.js';
 import {

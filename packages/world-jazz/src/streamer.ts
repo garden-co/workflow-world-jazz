@@ -1,5 +1,5 @@
+import type { Streamer } from '@vercel/workflow-world';
 import { co, type FileStream } from 'jazz-tools';
-import type { Streamer } from '../world/interfaces.js';
 import type { JazzStorageAccountResolver } from './types.js';
 
 export const createStreamer = (

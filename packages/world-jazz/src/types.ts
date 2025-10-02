@@ -1,4 +1,10 @@
 import {
+  EventTypeSchema,
+  StepSchema,
+  WebhookSchema,
+  WorkflowRunSchema,
+} from '@vercel/workflow-world';
+import {
   co,
   Group,
   type RefsToResolve,
@@ -6,10 +12,6 @@ import {
   type Resolved,
   z,
 } from 'jazz-tools';
-import { EventTypeSchema } from '../world/events.js';
-import { WorkflowRunSchema } from '../world/runs.js';
-import { StepSchema } from '../world/steps.js';
-import { WebhookSchema } from '../world/webhooks.js';
 
 export const JazzWorkflowRun = co.map({
   ...WorkflowRunSchema.omit({
