@@ -1,0 +1,21 @@
+import { once } from './util.js';
+
+const getDataDirFromEnv = () => {
+  return process.env.WORKFLOW_EMBEDDED_DATA_DIR || '.workflow-data';
+};
+
+const getPortFromEnv = () => {
+  const port = process.env.PORT;
+  if (port) {
+    return Number(port);
+  }
+  //
+  return 3000;
+};
+
+export const config = once(() => {
+  const dataDir = getDataDirFromEnv();
+  const port = getPortFromEnv();
+
+  return { dataDir, port };
+});

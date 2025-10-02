@@ -1,9 +1,9 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
+import { WorkflowChatTransport } from '@vercel/workflow-ai';
 import { useEffect, useMemo, useRef } from 'react';
 import type { MyUIMessage } from '@/util/chat-schema';
-import { transport } from '@/util/transport';
 import ChatInput from './chat-input';
 import Message from './message';
 
@@ -23,6 +23,7 @@ export default function ChatComponent() {
     onFinish(data) {
       console.log('onFinish', data);
 
+      // Update the chat history in `localStorage` to include the latest bot message
       console.log('Saving chat history to localStorage', data.messages);
       localStorage.setItem('chat-history', JSON.stringify(data.messages));
 
@@ -31,7 +32,45 @@ export default function ChatComponent() {
       });
     },
 
-    transport,
+    transport: new WorkflowChatTransport({
+      onChatSendMessage: (response, options) => {
+        console.log('onChatSendMessage', response, options);
+
+        // Update the chat history in `localStorage` to include the latest user message
+        localStorage.setItem('chat-history', JSON.stringify(options.messages));
+
+        // We'll store the workflow run ID in `localStorage` to allow the client
+        // to resume the chat session after a page refresh or network interruption
+        const workflowRunId = response.headers.get('x-workflow-run-id');
+        if (!workflowRunId) {
+          throw new Error(
+            'Workflow run ID not found in "x-workflow-run-id" response header'
+          );
+        }
+        localStorage.setItem('active-workflow-run-id', workflowRunId);
+      },
+      onChatEnd: ({ chatId, chunkIndex }) => {
+        console.log('onChatEnd', chatId, chunkIndex);
+
+        // Once the chat stream ends, we can remove the workflow run ID from `localStorage`
+        localStorage.removeItem('active-workflow-run-id');
+      },
+      // Configure reconnection to use the stored workflow run ID
+      prepareReconnectToStreamRequest: ({ id, api, ...rest }) => {
+        console.log('prepareReconnectToStreamRequest', id);
+        const workflowRunId = localStorage.getItem('active-workflow-run-id');
+        if (!workflowRunId) {
+          throw new Error('No active workflow run ID found');
+        }
+        // Use the workflow run ID instead of the chat ID for reconnection
+        return {
+          ...rest,
+          api: `/api/chat/${encodeURIComponent(workflowRunId)}/stream`,
+        };
+      },
+      // Optional: Configure error handling for reconnection attempts
+      maxConsecutiveErrors: 5,
+    }),
   });
 
   // Load chat history from `localStorage`. In a real-world application,

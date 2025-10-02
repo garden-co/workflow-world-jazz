@@ -1,0 +1,32 @@
+{
+  "name": "@vercel/workflow-world-vercel",
+  "version": "0.0.1-alpha.2",
+  "type": "module",
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "tsc --build --clean",
+    "test": "echo 'No tests yet'",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vercel/oidc": "^2.0.2",
+    "@vercel/queue": "0.0.0-alpha.23",
+    "@vercel/workflow-world": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@vercel/workflow-tsconfig": "workspace:*"
+  }
+}

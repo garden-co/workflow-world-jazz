@@ -1,0 +1,52 @@
+---
+title: getWorkflowContext
+---
+
+import { generateDefinition } from "@/lib/tsdoc"
+
+# `getWorkflowContext`
+
+Returns additional metadata available in the current workflow function.
+
+You may want to use this function when you need to:
+
+* Log workflow run IDs
+* Access timing information of a workflow
+
+<Callout>
+If you need to access step context, take a look at [`getStepContext`](/docs/api-reference/vercel-workflow-core/get-step-context).
+</Callout>
+
+```typescript lineNumbers
+import { getWorkflowContext } from "@vercel/workflow-core"
+
+async function testWorkflow() {
+    "use workflow"
+
+    const ctx = getWorkflowContext() // [!code highlight]
+    console.log(ctx.workflowRunId)
+}
+```
+
+## API Signature
+
+### Parameters
+
+<TSDoc
+definition={generateDefinition({
+  code: `
+import { getWorkflowContext } from "@vercel/workflow-core";
+export default getWorkflowContext;`
+})}
+showSections={['parameters']}
+/>
+
+### Returns
+
+<TSDoc
+definition={generateDefinition({
+  code: `
+import type { WorkflowContext } from "@vercel/workflow-core";
+export default WorkflowContext;`
+})}
+/>

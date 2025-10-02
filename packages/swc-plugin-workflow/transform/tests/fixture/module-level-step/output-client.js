@@ -1,4 +1,5 @@
 import { runStep as __private_run_step } from "@vercel/workflow-core/runtime";
+/**__internal_workflows{"steps":{"input.js":{"step":{"stepId":"step-input-js-step"},"stepArrow":{"stepId":"step-input-js-stepArrow"}}}}*/;
 const localArrow = async (input)=>{
     return input.bar;
 };

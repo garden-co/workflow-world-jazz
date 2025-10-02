@@ -6,7 +6,7 @@
  * `workflow` and `workflow/runtime`?
  */
 
-export { getContext, type WorkflowContext } from './get-context.js';
+export { __builtin_fetch as fetch } from './builtins.js';
 export {
   getWebhook,
   type Webhook,
@@ -17,5 +17,11 @@ export {
   RetryableError,
   type RetryableErrorOptions,
 } from './global.js';
-export { createWorkflowOutputStream } from './output-stream.js';
+export { getWorld } from './runtime/world.js';
 export { sleep } from './sleep.js';
+export { getStepContext, type StepContext } from './step/get-step-context.js';
+export {
+  getWorkflowContext,
+  type WorkflowContext,
+} from './step/get-workflow-context.js';
+export { getWorkflowWritableStream } from './writable-stream.js';

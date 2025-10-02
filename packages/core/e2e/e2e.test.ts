@@ -1,5 +1,6 @@
 import { assert, describe, expect, test } from 'vitest';
 import { dehydrateWorkflowArguments } from '../src/serialization';
+import { cliInspectJson } from './utils';
 
 const deploymentUrl = process.env.DEPLOYMENT_URL;
 if (!deploymentUrl) {
@@ -7,11 +8,19 @@ if (!deploymentUrl) {
 }
 
 async function triggerWorkflow(
-  workflow: string,
+  workflow: string | { workflowFile: string; workflowFn: string },
   args: any[]
 ): Promise<{ runId: string }> {
   const url = new URL('/api/trigger', deploymentUrl);
-  url.searchParams.set('workflow', workflow);
+  const workflowFn =
+    typeof workflow === 'string' ? workflow : workflow.workflowFn;
+  const workflowFile =
+    typeof workflow === 'string'
+      ? 'workflows/99_e2e.ts'
+      : workflow.workflowFile;
+
+  url.searchParams.set('workflowFile', workflowFile);
+  url.searchParams.set('workflowFn', workflowFn);
   const res = await fetch(url, {
     method: 'POST',
     body: JSON.stringify(dehydrateWorkflowArguments(args, [], globalThis)),
@@ -54,10 +63,35 @@ async function getWorkflowReturnValue(runId: string) {
 }
 
 describe.concurrent('e2e', () => {
-  test('addTenWorkflow', { timeout: 60_000 }, async () => {
-    const run = await triggerWorkflow('addTenWorkflow', [123]);
+  test.each([
+    {
+      workflowFile: 'workflows/99_e2e.ts',
+      workflowFn: 'addTenWorkflow',
+    },
+    {
+      workflowFile: 'workflows/98_duplicate_case.ts',
+      workflowFn: 'addTenWorkflow',
+    },
+  ])('addTenWorkflow', { timeout: 60_000 }, async (workflow) => {
+    const run = await triggerWorkflow(workflow, [123]);
     const returnValue = await getWorkflowReturnValue(run.runId);
     expect(returnValue).toBe(133);
+
+    const { json } = await cliInspectJson(`runs ${run.runId}`);
+    const workflowName = `${workflow.workflowFile.replace(/(\/|\.|_)/g, '-')}-${workflow.workflowFn}`;
+    expect(json).toMatchObject({
+      runId: run.runId,
+      workflowName: expect.any(String),
+      status: 'completed',
+      input: [123],
+      output: 133,
+    });
+    // In local vs. vercel backends, the workflow name is different, so we check for either,
+    // since this test runs against both.
+    expect(json.workflowName).toBeOneOf([
+      `workflow-example-${workflowName}`,
+      `workflow-${workflowName}`,
+    ]);
   });
 
   test('promiseAllWorkflow', { timeout: 60_000 }, async () => {
@@ -151,36 +185,57 @@ describe.concurrent('e2e', () => {
     expect(returnValue.endTime - returnValue.startTime).toBeGreaterThan(9999);
   });
 
+  test('sleepingDateWorkflow', { timeout: 60_000 }, async () => {
+    const endDate = new Date(Date.now() + 30_000);
+    const run = await triggerWorkflow('sleepingDateWorkflow', [endDate]);
+    const returnValue = await getWorkflowReturnValue(run.runId);
+    expect(returnValue.startTime).toBeLessThan(returnValue.endTime);
+    expect(returnValue.endTime).toBeGreaterThanOrEqual(endDate.getTime());
+  });
+
   test('nullByteWorkflow', { timeout: 60_000 }, async () => {
     const run = await triggerWorkflow('nullByteWorkflow', []);
     const returnValue = await getWorkflowReturnValue(run.runId);
     expect(returnValue).toBe('null byte \0');
   });
 
-  test('getContextWorkflow', { timeout: 60_000 }, async () => {
-    const run = await triggerWorkflow('getContextWorkflow', []);
+  test('workflowAndStepContextWorkflow', { timeout: 60_000 }, async () => {
+    const run = await triggerWorkflow('workflowAndStepContextWorkflow', []);
     const returnValue = await getWorkflowReturnValue(run.runId);
 
     expect(returnValue).toHaveProperty('workflowCtx');
     expect(returnValue).toHaveProperty('stepCtx');
+    expect(returnValue).toHaveProperty('innerWorkflowCtx');
 
     // workflow and context
 
-    // Both contexts should have the same runId
+    expect(returnValue.workflowCtx).toStrictEqual(returnValue.innerWorkflowCtx);
+
+    // workflow context should have workflowRunId and stepCtx shouldn't
     expect(returnValue.workflowCtx.workflowRunId).toBe(run.runId);
-    expect(returnValue.stepCtx.workflowRunId).toBe(run.runId);
+    expect(returnValue.innerWorkflowCtx.workflowRunId).toBe(run.runId);
+    expect(returnValue.stepCtx.workflowRunId).toBeUndefined();
 
-    // Both contexts should have matching workflowStartedAt timestamp
+    // workflow context should have workflowStartedAt and stepCtx shouldn't
     expect(typeof returnValue.workflowCtx.workflowStartedAt).toBe('string');
-    expect(typeof returnValue.stepCtx.workflowStartedAt).toBe('string');
-    expect(returnValue.workflowCtx.workflowStartedAt).toBe(
-      returnValue.stepCtx.workflowStartedAt
+    expect(typeof returnValue.innerWorkflowCtx.workflowStartedAt).toBe(
+      'string'
     );
+    expect(returnValue.innerWorkflowCtx.workflowStartedAt).toBe(
+      returnValue.workflowCtx.workflowStartedAt
+    );
+    expect(returnValue.stepCtx.workflowStartedAt).toBeUndefined();
 
-    // Both contexts should have matching url
+    // workflow context should have url and stepCtx shouldn't
     expect(typeof returnValue.workflowCtx.url).toBe('string');
-    expect(typeof returnValue.stepCtx.url).toBe('string');
-    expect(returnValue.workflowCtx.url).toBe(returnValue.stepCtx.url);
+    expect(typeof returnValue.innerWorkflowCtx.url).toBe('string');
+    expect(returnValue.innerWorkflowCtx.url).toBe(returnValue.workflowCtx.url);
+    expect(returnValue.stepCtx.url).toBeUndefined();
+
+    // workflow context shouldn't have stepId, stepStartedAt, or attempt
+    expect(returnValue.workflowCtx.stepId).toBeUndefined();
+    expect(returnValue.workflowCtx.stepStartedAt).toBeUndefined();
+    expect(returnValue.workflowCtx.attempt).toBeUndefined();
 
     // step context
 
@@ -216,5 +271,16 @@ describe.concurrent('e2e', () => {
 
     const returnValue = await getWorkflowReturnValue(run.runId);
     expect(returnValue).toEqual('done');
+  });
+
+  test('fetchWorkflow', { timeout: 60_000 }, async () => {
+    const run = await triggerWorkflow('fetchWorkflow', []);
+    const returnValue = await getWorkflowReturnValue(run.runId);
+    expect(returnValue).toMatchObject({
+      userId: 1,
+      id: 1,
+      title: 'delectus aut autem',
+      completed: false,
+    });
   });
 });

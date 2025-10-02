@@ -12,17 +12,13 @@ export function withWorkflow({
     };
   };
 }) {
-  workflows ||= {};
-  workflows.embedded ||= {};
-  workflows.embedded.dataDir = '.next/workflow-data';
-  if (
-    // don't use embedded if deploying on Vercel
-    !process.env.VERCEL_DEPLOYMENT_ID
-  ) {
-    process.env.WORKFLOW_USE_EMBEDDED_WORLD = '1';
-    process.env.WORKFLOW_EMBEDDED_WORLD_CONFIG = JSON.stringify(
-      workflows.embedded
-    );
+  if (!process.env.VERCEL_DEPLOYMENT_ID) {
+    process.env.WORKFLOW_TARGET_WORLD = 'embedded';
+    process.env.WORKFLOW_EMBEDDED_DATA_DIR = '.next/workflow-data';
+    const maybePort = workflows?.embedded?.port;
+    if (maybePort) {
+      process.env.PORT = maybePort.toString();
+    }
   }
 
   // configure the loader if turbopack is being used
@@ -109,14 +105,6 @@ export function withWorkflow({
 
       await workflowBuilder.build();
       process.env.WORKFLOW_NEXT_PRIVATE_BUILT = '1';
-    }
-
-    // If we are doing a production build unset the embedded env
-    // since we don't want to trigger port detection which will fail
-    // during a build since no server is running
-    if (phase === 'phase-production-build') {
-      delete process.env.WORKFLOW_USE_EMBEDDED_WORLD;
-      delete process.env.WORKFLOW_EMBEDDED_WORLD_CONFIG;
     }
 
     return nextConfig;

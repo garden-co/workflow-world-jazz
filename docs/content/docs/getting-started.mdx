@@ -5,10 +5,10 @@ title: Getting Started
 # Getting Started
 
 <Callout type="warn">
-Currently, Workflow SDK is only supported in Next.js. We're actively working to provide more support to other frameworks.
+Currently, Workflow SDK works best with Next.js. We're actively working on improving support and docs to use workflow by itself or with other frameworks.
 </Callout>
 
-In this guide, you will add the Workflow SDK to create your first workflow in your Next.js app to create a simple workflow that logs its steps. Along the way, you'll learn more about the concepts that are fundamental to using the SDK in your own projects.
+This guide will walk through setting up your first workflow in a Next.js app. Along the way, you'll learn more about the concepts that are fundamental to using the SDK in your own projects.
 
 ---
 
@@ -30,7 +30,30 @@ cd my-workflow-app
 
 Install `@vercel/workflow-core`, and `@vercel/workflow-next`, which are the packages needed to get started with the Workflow SDK.
 
-<InstallCommandTabs />
+<BaseUrl>
+  {(baseUrl) => (
+    <Tabs items={['pnpm', 'npm', 'yarn']}>
+      <Tab value="pnpm">
+        <CodeBlock>
+            pnpm i {baseUrl}/vercel-workflow-core.tgz \{'\n'}
+            {baseUrl}/vercel-workflow-next.tgz
+        </CodeBlock>
+      </Tab>
+      <Tab value="npm">
+        <CodeBlock>
+            npm i {baseUrl}/vercel-workflow-core.tgz \{'\n'}
+            {baseUrl}/vercel-workflow-next.tgz
+        </CodeBlock>
+      </Tab>
+      <Tab value="yarn">
+        <CodeBlock>
+            yarn add {baseUrl}/vercel-workflow-core.tgz \{'\n'}
+            {baseUrl}/vercel-workflow-next.tgz
+        </CodeBlock>
+      </Tab>
+    </Tabs>
+  )}
+</BaseUrl>
 
 ### Configure Next.js
 
@@ -97,26 +120,28 @@ async function sendOnboardingEmail(userId: string) {
 
 Taking a look at this code:
 
-* We define a workflow function with the directive `"use workflow"`, which is where you define your workflow, whereas we define step functions with `"use step"`. You can think of a workflow function as the *orchestrator* of steps, whereas steps themselves are the *executors*. To learn more, check out [Core Components](/docs/foundations/concepts#core-components).
-* Inside the `sendWelcomeEmail` step, we throw an error 30% of the time. You'll see in your server logs that the step will be automatically re-enqueued to be retried. By default, a step will be retried a maximum of 3 times before it's marked as failed. You can learn more about customizing max retries in [Concepts](/docs/foundations/concepts#customizing-max-retries).
-* We use the [`sleep`](/docs/workflow-sdk-core/sleep) function from the [Workflow SDK Core](/docs/workflow-sdk-core) to suspend execution in a workflow for 30 seconds. During this time, the workflow doesn't use up any resources. After these 30 seconds, the workflow replays from the start deterministically, sourcing state from the event log.
+* We define a **workflow** function with the directive `"use workflow"`. Think of the workflow function as the *orchestrator* of individual **steps**.
+* Business logic lives inside **steps**, like the `createUser` step. When a step is invoked inside a **workflow**, it gets enqueued to run on a separate request while the workflow is suspended.
+* If a step throws an error, like in `sendWelcomeEmail`, the step will automatically be retried until it succeeds (or hits a default max retry count).
+* The workflow's `sleep` function allows us to suspend execution of the workflow without using up any resources. A sleep can be a few seconds, hours, days, or even months long.
 
 <Callout>
-The workflow's execution states are stored in the event log so that it can be reproduced. Learn more in [Concepts](/docs/foundations/concepts#workflow-functions).
+We'll dive deeper into workflows, steps, retrying, and sleep in [Concepts](/docs/foundations/concepts).
 </Callout>
 
 ## Create Your Route Handler
 
-To actually invoke your new workflow, you'll have to add your workflow to a `POST` API Route Handler, `app/api/signup/route.ts`. Then, add the following code:
+To invoke your new workflow, you'll have to add your workflow to a `POST` API Route Handler, `app/api/signup/route.ts`. Then, add the following code:
 
 ```typescript title="app/api/signup/route.ts"
+import { start } from "@vercel/workflow-core/runtime";
 import { userSignupWorkflow } from "@/workflows/user-signup";
 import { NextResponse } from "next/server";
  
 export async function POST(request: Request) {
  const { email } = await request.json();
  
- await userSignupWorkflow(email); // Executes asynchronously and doesn't block your app
+ await start(userSignupWorkflow, [email]); // Executes asynchronously and doesn't block your app
  
  return NextResponse.json({
   message: "User signup workflow started",
@@ -153,5 +178,5 @@ Watch the Next.js development server logs to see your workflow execute as well a
 ## Next Steps
 
 * Learn more about the [Workflow SDK Concepts](/docs/foundations/concepts).
-* Explore [Workflow SDK Core](/docs/workflow-sdk-core).
+* Explore [Workflow SDK Core](/docs/api-reference/vercel-workflow-core).
 * Check [Troubleshooting](/docs/troubleshooting) if you encounter issues.

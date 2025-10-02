@@ -1,0 +1,37 @@
+---
+title: "@vercel/workflow-ai"
+---
+
+# `@vercel/workflow-ai`
+
+## Installation
+
+<BaseUrl>
+  {(baseUrl) => (
+    <Tabs items={['pnpm', 'npm', 'yarn']}>
+      <Tab value="pnpm">
+        <CodeBlock>
+            pnpm i {baseUrl}/vercel-workflow-ai.tgz
+        </CodeBlock>
+      </Tab>
+      <Tab value="npm">
+        <CodeBlock>
+            npm i {baseUrl}/vercel-workflow-ai.tgz
+        </CodeBlock>
+      </Tab>
+      <Tab value="yarn">
+        <CodeBlock>
+            yarn add {baseUrl}/vercel-workflow-ai.tgz
+        </CodeBlock>
+      </Tab>
+    </Tabs>
+  )}
+</BaseUrl>
+
+## Functions
+
+<Cards>
+    <Card title="WorkflowChatTransport" href="/docs/api-reference/vercel-workflow-ai/workflow-chat-transport">
+      A drop-in transport for the AI SDK for automatic reconnection in interrupted streams.
+    </Card>
+</Cards>

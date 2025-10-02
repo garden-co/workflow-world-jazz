@@ -1,0 +1,39 @@
+---
+title: "@vercel/workflow-next"
+---
+
+# `@vercel/workflow-next`
+
+Next.js integration for Workflow SDK that automatically configures bundling and runtime support.
+
+## Installation
+
+<BaseUrl>
+  {(baseUrl) => (
+    <Tabs items={['pnpm', 'npm', 'yarn']}>
+      <Tab value="pnpm">
+        <CodeBlock>
+            pnpm i {baseUrl}/vercel-workflow-next.tgz
+        </CodeBlock>
+      </Tab>
+      <Tab value="npm">
+        <CodeBlock>
+            npm i {baseUrl}/vercel-workflow-next.tgz
+        </CodeBlock>
+      </Tab>
+      <Tab value="yarn">
+        <CodeBlock>
+            yarn add {baseUrl}/vercel-workflow-next.tgz
+        </CodeBlock>
+      </Tab>
+    </Tabs>
+  )}
+</BaseUrl>
+
+## Functions
+
+<Cards>
+    <Card title="WithWorkflow" href="/docs/api-reference/vercel-workflow-next/with-workflow">
+        Configures webpack/turbopack loaders to transform workflow code (`"use step"`/`"use workflow"` directives)
+    </Card>
+</Cards>

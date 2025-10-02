@@ -1,5 +1,62 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.26
+
+### Patch Changes
+
+- 544055f: Add pid-port dependency for embedded world
+
+## 0.0.1-alpha.25
+
+### Patch Changes
+
+- e275561: Refactor world selection logic in core, and unify with CLI use. Polish pagination. Refactor logging.
+- Updated dependencies [e275561]
+  - @vercel/workflow-world-embedded@0.0.1-alpha.3
+
+## 0.0.1-alpha.24
+
+### Patch Changes
+
+- a946b38: Remove "workflow:step" export condition
+- 3ee71fa: Export fetch directly from workflow packages
+- a61eaad: Fix `@link` docs imports
+- 07b3283: standardize prefixes in embedded world
+- 7c0f71e: CLI: Add json mode
+- d66070f: Rename `StepsNotRunError` to `WorkflowSuspension`
+- d808404: Fix export for get-webhook
+- eb76cb3: Remove workflow context properties from `getStepContext()` to use `getWorkflowContext()` instead
+- 345836a: Allow listing steps/streams/events without a run ID, improve table formatting, show serialized input/output
+- f2168a6: Fix vercel proxy paths, add pagination
+- cd4a41c: extract "world" interface packages
+- Updated dependencies [cd4a41c]
+  - @vercel/workflow-world-embedded@0.0.1-alpha.2
+  - @vercel/workflow-world-vercel@0.0.1-alpha.2
+  - @vercel/workflow-world@0.0.1-alpha.2
+
+## 0.0.1-alpha.23
+
+### Patch Changes
+
+- 37e6ee8: Rename `createWorkflowOutputStream` to `getWorkflowWritableStream`, and `getWorkflowOutputStream` to `getWorkflowReadableStream`
+- d412985: remove http status code from step retry
+- f56e1e6: Fully use export condition for workflow versus step
+- a85227c: Fix getStepContext and getWorkflowContext exports
+
+## 0.0.1-alpha.22
+
+### Patch Changes
+
+- a5197f7: Added inspect commands to cli
+
+## 0.0.1-alpha.21
+
+### Patch Changes
+
+- d4914d7: Split getContext into getWorkflowContext and getStepContext
+- 8ed4fb6: Add support for `startIndex` option in `getWorkflowOutputStream()`
+- 705e63c: extend sleep to use an end date
+
 ## 0.0.1-alpha.20
 
 ### Patch Changes

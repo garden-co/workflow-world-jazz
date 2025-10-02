@@ -36,7 +36,7 @@ export function Card({
     </>
   );
 
-  const cardClassName = `hover:opacity-100 no-underline block p-4 border hover:bg-secondary/50 rounded-lg hover:shadow-md transition ease-out [&_h3]:m-0 [&_h3]:!text-base [&_h3]:!font-medium [&_p]:font-normal [&_p]:text-sm [&_p]:mt-2 [&_p]:text-muted-foreground [&_p]:m-0 ${className || ''}`;
+  const cardClassName = `hover:opacity-100 no-underline block p-4 border hover:bg-secondary/50 rounded-lg transition ease-out [&_h3]:m-0 [&_h3]:!text-base [&_h3]:!font-medium [&_p]:font-normal [&_p]:text-sm [&_p]:mt-2 [&_p]:text-muted-foreground [&_p]:m-0 ${className || ''}`;
 
   if (href) {
     return (

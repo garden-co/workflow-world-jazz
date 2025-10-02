@@ -14,14 +14,14 @@ In this section, you'll learn more about what workflows are, their core componen
 
 Workflows (i.e. *durable functions*) are a programming model for building long-running, stateful application logic that can maintain their execution state across restarts, failures, and scale events. Unlike traditional serverless functions that lose all state when they terminate, workflows persist their progress and can resume exactly where they left off.
 
-This lets you write ordinary asynchronous code (awaits, loops, error handling) while the platform provides reliable timers, retries, idempotency, and external resumption (ex. via webhooks).
+This lets you write ordinary asynchronous code (awaits, loops, error handling) while the platform provides reliable timers, retries, idempotency, and external resumption (for example, webhooks).
 
 The result is resilient function execution that can span minutes to months (or even longer) with strong operational guarantees.
 
 Workflows consist of two types functions that work together:
 
-1. **Workflow Functions**: Orchestrates steps
-2. **Step Functions**: Carries out work
+1. **Workflow Functions**: Functions that orchestrate/organize steps
+2. **Step Functions**: Functions that carry out the actual work
 
 ### Workflow Functions
 
@@ -55,7 +55,7 @@ Workflow functions have the ability to automatically suspend while they wait on 
 
 - Waiting on a step function: the workflow yields while the step runs in the step runtime.
 - Using `sleep()` to pause for some fixed duration.
-- Awaiting on a promise returned by [`getWebhook()`](/docs/workflow-sdk-core/get-webhook), which resumes the workflow when an external system calls the generated webhook URL.
+- Awaiting on a promise returned by [`getWebhook()`](/docs/api-reference/vercel-workflow-core/get-webhook), which resumes the workflow when an external system calls the generated webhook URL.
 
 ```typescript
 import { sleep, getWebhook } from '@vercel/workflow-core'; // [!code highlight]
@@ -152,18 +152,27 @@ async function greet(name: string) {
 Organize your workflow code for maintainability, we recommend the following structure:
 
 <Files>
-  <Folder name="app" defaultOpen disabled>
-    <Folder name="workflows" defaultOpen disabled>
-      <File name="user-signin-workflow.ts" />
-      <File name="user-signup-workflow.ts" />
+  <Folder name="workflows" defaultOpen disabled>
+    <Folder name="userOnboarding" defaultOpen disabled>
+      <File name="index.ts" />
+      <File name="steps.ts" />
+    </Folder>
+    <Folder name="aiVideoGeneration" defaultOpen disabled>
+      <File name="index.ts" />
       <Folder name="steps" defaultOpen disabled>
-        <File name="api.ts" />
-        <File name="database.ts" />
-        <File name="email.ts" />
+        <File name="transcribeUpload.ts" />
+        <File name="generateVideo.ts" />
+        <File name="notifyUser.ts" />
       </Folder>
+    </Folder>
+    <Folder name="shared" defaultOpen disabled>
+      <File name="validateInput.ts" />
+      <File name="logActivity.ts" />
     </Folder>
   </Folder>
 </Files>
+
+You can choose to organize your steps into a single `steps.ts` file or separate files within a `steps` folder. The `shared` folder is a good place to put common steps that are used by multiple workflows.
 
 ---
 
@@ -202,4 +211,4 @@ async function callAPI(endpoint: string) {
 - Throwing a `RetryableError` also automatically re-enqueues a step but with an optional `retryAfter` argument.
 - `FatalError` marks a step as failed, and does **not** re-enqueue a step.
 
-To learn more about errors in workflows, take a look at [Error Handling](/docs/workflow-sdk-core/error-handling).
+To learn more about errors and retries in workflows, take a look at [Errors & Retries](/docs/foundations/errors-and-retries).

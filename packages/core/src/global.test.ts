@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   FatalError,
   type StepInvocationQueueItem,
-  StepsNotRunError,
+  WorkflowSuspension,
 } from './global.js';
 
 describe('FatalError', () => {
@@ -32,8 +32,8 @@ describe('FatalError', () => {
   });
 });
 
-describe('StepsNotRunError', () => {
-  it('should create a StepsNotRunError instance with basic properties', () => {
+describe('WorkflowSuspension', () => {
+  it('should create a WorkflowSuspension instance with basic properties', () => {
     const steps: InvocationQueueItem[] = [
       {
         stepName: 'test-step',
@@ -41,11 +41,11 @@ describe('StepsNotRunError', () => {
         invocationId: 'inv-1',
       },
     ];
-    const error = new StepsNotRunError(steps);
+    const error = new WorkflowSuspension(steps);
 
-    expect(error).toBeInstanceOf(StepsNotRunError);
+    expect(error).toBeInstanceOf(WorkflowSuspension);
     expect(error).toBeInstanceOf(Error);
-    expect(error.name).toBe('StepsNotRunError');
+    expect(error.name).toBe('WorkflowSuspension');
     expect(error.steps).toEqual(steps);
   });
 
@@ -58,7 +58,7 @@ describe('StepsNotRunError', () => {
         invocationId: 'inv-1',
       },
     ];
-    const error = new StepsNotRunError(steps);
+    const error = new WorkflowSuspension(steps);
 
     expect(error.message).toBe('1 steps have not been run yet');
   });
@@ -78,14 +78,14 @@ describe('StepsNotRunError', () => {
         invocationId: 'inv-2',
       },
     ];
-    const error = new StepsNotRunError(steps);
+    const error = new WorkflowSuspension(steps);
 
     expect(error.message).toBe('2 steps have not been run yet');
   });
 
   it('should handle empty steps array', () => {
     const steps: StepInvocationQueueItem[] = [];
-    const error = new StepsNotRunError(steps);
+    const error = new WorkflowSuspension(steps);
 
     expect(error.steps).toEqual([]);
     expect(error.message).toBe('0 steps have not been run yet');
@@ -113,7 +113,7 @@ describe('StepsNotRunError', () => {
         invocationId: 'another-inv',
       },
     ];
-    const error = new StepsNotRunError(complexSteps);
+    const error = new WorkflowSuspension(complexSteps);
 
     expect(error.steps).toEqual(complexSteps);
     expect(error.message).toBe('2 steps have not been run yet');
@@ -136,11 +136,11 @@ describe('StepsNotRunError', () => {
         invocationId: 'inv-1',
       },
     ];
-    const error = new StepsNotRunError(steps);
+    const error = new WorkflowSuspension(steps);
 
     expect(error instanceof Error).toBe(true);
-    expect(error instanceof StepsNotRunError).toBe(true);
-    expect(error.constructor).toBe(StepsNotRunError);
+    expect(error instanceof WorkflowSuspension).toBe(true);
+    expect(error.constructor).toBe(WorkflowSuspension);
   });
 
   it('should have stack trace', () => {
@@ -152,10 +152,10 @@ describe('StepsNotRunError', () => {
         invocationId: 'inv-1',
       },
     ];
-    const error = new StepsNotRunError(steps);
+    const error = new WorkflowSuspension(steps);
 
     expect(error.stack).toBeDefined();
-    expect(error.stack).toContain('StepsNotRunError');
+    expect(error.stack).toContain('WorkflowSuspension');
   });
 
   it('should preserve all step information', () => {
@@ -173,7 +173,7 @@ describe('StepsNotRunError', () => {
         invocationId: 'email-456',
       },
     ];
-    const error = new StepsNotRunError(steps);
+    const error = new WorkflowSuspension(steps);
 
     expect(error.steps).toHaveLength(2);
     expect(error.steps[0].stepName).toBe('database-query');

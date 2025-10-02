@@ -69,12 +69,12 @@ export interface WebhookInvocationQueueItem {
 export type QueueItem = StepInvocationQueueItem | WebhookInvocationQueueItem;
 
 /**
- * An error that is thrown when one or more operations (steps/webhooks) are called but do
+ * An error that is thrown when one or more operations (steps/hooks/etc.) are called but do
  * not yet have corresponding entries in the event log. The workflow
  * dispatcher will catch this error and push the operations
  * onto the queue.
  */
-export class StepsNotRunError extends Error {
+export class WorkflowSuspension extends Error {
   steps: QueueItem[];
   globalThis: typeof globalThis;
   stepCount: number;
@@ -92,7 +92,7 @@ export class StepsNotRunError extends Error {
             ? `${webhookCount} webhooks have not been created yet`
             : '0 steps have not been run yet'; // Default case for empty array
     super(description);
-    this.name = 'StepsNotRunError';
+    this.name = 'WorkflowSuspension';
     this.steps = steps;
     this.globalThis = global;
     this.stepCount = stepCount;

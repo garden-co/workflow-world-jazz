@@ -4,12 +4,64 @@ title: Workflow Functions [WIP]
 
 # Workflow Functions
 
-Workflow functions define the entrypoint of a workflow and organize how step functions are called. This type of function does not have access to the Node.js runtime, nor can it use `npm` packages.
+Workflow functions define the entrypoint of a workflow and organize how step functions are called. This type of function does not have access to the Node.js runtime, and usable `npm` packages are limited (cannot import Node.js core modules).
 
 Although this may seem limiting initially, you'll come to learn that this is crucial for suspending and accurately resuming execution of workflows.
 
 ## Defining a Workflow Function
 
 A workflow function is defined by the `"use workflow"` directive.
+
+```ts lineNumbers
+async function myWorkflow() { 
+    "use workflow" // [!code highlight]
+    // No Node.js access, limited npm package access
+    // ...
+}
+```
+
+## Serialization
+
+All function arguments, return values, and data passed between workflow and step functions must be serializable. The Workflow SDK uses a custom serialization system built on top of [devalue](https://github.com/sveltejs/devalue) that supports standard JSON types plus additional web platform types.
+
+### Supported Serializable Types
+
+The following types can be serialized and passed through workflow functions:
+
+**Standard JSON Types:**
+
+- `string`
+- `number`
+- `boolean`
+- `null`
+- `undefined`
+- Arrays of serializable values
+- Objects with string keys and serializable values
+
+**Extended Types (with special handling):**
+
+- `ArrayBuffer`
+- `BigInt64Array`, `BigUint64Array`
+- `Date`
+- `Float32Array`, `Float64Array`
+- `Headers`
+- `Int8Array`, `Int16Array`, `Int32Array`
+- `Map<Serializable, Serializable>`
+- `ReadableStream<Uint8Array>`
+- `RegExp`
+- `Response`
+- `Set<Serializable>`
+- `URL`
+- `URLSearchParams`
+- `Uint8Array`, `Uint8ClampedArray`, `Uint16Array`, `Uint32Array`
+- `WritableStream<Uint8Array>`
+
+### Special Stream Handling
+
+`ReadableStream` and `WritableStream` receive special treatment in the serialization system. These streams are automatically managed by the workflow runtime and can be passed between workflow and step functions while maintaining their streaming capabilities.
+
+<Callout type="info">
+The serialization system ensures that all data persists correctly across workflow suspensions and resumptions, enabling durable execution.
+</Callout>
 
 ## The Workflow Runtime

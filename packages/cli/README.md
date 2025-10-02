@@ -20,6 +20,14 @@ workflow build --target vercel-build-output-api
 workflow dev          # Development server with file watching
 workflow init         # Initialize new workflow project  
 workflow validate     # Validate workflow files
+
+# Inspect runs, steps, and streams
+workflow inspect runs
+workflow inspect runs <run-id>
+workflow inspect steps <run-id>
+workflow inspect steps <run-id> <step-id>
+workflow inspect streams <run-id>
+workflow inspect streams <run-id> <stream-id>
 ```
 
 ## Commands
@@ -50,6 +58,29 @@ Initialize a new workflow project with templates and interactive setup.
 ### `workflow validate` *(Coming Soon)*
 
 Validate workflow files with syntax checking, type validation, and best practice recommendations.
+
+### `workflow inspect`
+
+Inspect runs, steps, and streams.
+
+**Examples:**
+
+```bash
+workflow inspect runs
+# or
+wf i run
+```
+
+shows:
+
+```bash
+runId                       workflowName  status     startedAt      completedAt
+--------------------------  ------------  ---------  -------------  -------------
+01DM34QQ1DQCDQB7Z671PME0MX  chat          completed  1758567853759  1758567864010
+# ... more runs
+```
+
+For more commands and explanations, simply run `workflow inspect` without any arguments.
 
 ## Build Targets
 

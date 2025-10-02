@@ -1,14 +1,35 @@
 'use client';
 
+import { NavProvider } from 'fumadocs-ui/contexts/layout';
+import { useSidebar } from 'fumadocs-ui/contexts/sidebar';
+import {
+  ChevronDown,
+  Languages,
+  Menu as MenuIcon,
+  Workflow,
+} from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Fragment, type HTMLAttributes, useMemo } from 'react';
+import { Banner } from '@/components/ui/banner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/cn';
+import { LanguageToggle, LanguageToggleText } from '../../language-toggle';
+import { LargeSearchToggle, SearchToggle } from '../../search-toggle';
+import { ThemeToggle } from '../../theme-toggle';
+import { buttonVariants } from '../../ui/button';
 import {
   type BaseLayoutProps,
   getLinks,
   type LinkItemType,
   type NavOptions,
 } from '../shared/index';
-import { NavProvider } from 'fumadocs-ui/contexts/layout';
+import { Menu, MenuContent, MenuLinkItem, MenuTrigger } from './menu';
 import {
   Navbar,
   NavbarLink,
@@ -17,27 +38,6 @@ import {
   NavbarMenuLink,
   NavbarMenuTrigger,
 } from './navbar';
-import { LargeSearchToggle, SearchToggle } from '../../search-toggle';
-import { ThemeToggle } from '../../theme-toggle';
-import { LanguageToggle, LanguageToggleText } from '../../language-toggle';
-import {
-  ChevronDown,
-  Languages,
-  Menu as MenuIcon,
-  Workflow,
-} from 'lucide-react';
-import Link from 'next/link';
-import { Menu, MenuContent, MenuLinkItem, MenuTrigger } from './menu';
-import { buttonVariants } from '../../ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Separator } from '@/components/ui/separator';
-import { usePathname } from 'next/navigation';
-import { useSidebar } from 'fumadocs-ui/contexts/sidebar';
-import { Banner } from '@/components/ui/banner';
 
 export interface HomeLayoutProps extends BaseLayoutProps {
   nav?: Partial<
@@ -58,8 +58,7 @@ export function HomeLayout(
     links,
     githubUrl,
     i18n,
-    disableThemeSwitch = false,
-    themeSwitch = { enabled: !disableThemeSwitch },
+    themeSwitch = { enabled: true },
     searchToggle,
     ...rest
   } = props;
@@ -183,7 +182,7 @@ export function Header({
           </div>
           <Link
             href={nav.url ?? '/'}
-            className="inline-flex items-center gap-2.5 font-semibold"
+            className="inline-flex items-center gap-2.5"
           >
             {nav.title}
           </Link>

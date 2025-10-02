@@ -1,0 +1,30 @@
+{
+  "name": "@vercel/workflow-ai",
+  "version": "0.0.1-alpha.1",
+  "description": "Workflow SDK compatible helper library for the AI SDK",
+  "type": "module",
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "ai",
+    "workflow",
+    "sdk"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "tsc --build --clean",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@vercel/workflow-tsconfig": "workspace:*",
+    "ai": "5.1.0-beta.8"
+  },
+  "peerDependencies": {
+    "ai": "5.1.0-beta.8"
+  },
+  "dependencies": {
+    "zod": "4"
+  }
+}

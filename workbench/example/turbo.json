@@ -3,7 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "outputs": [".well-known/workflow/**", ".vercel/output/**"]
+      "outputs": [".well-known/workflow/**", ".vercel/output/**", "manifest.js"]
     }
   }
 }

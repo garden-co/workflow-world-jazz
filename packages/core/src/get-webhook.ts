@@ -2,6 +2,9 @@ import type { JSONSchema7 } from 'json-schema';
 import type { ZodType } from 'zod';
 
 export interface Webhook {
+  /**
+   * The URL that external systems can call to send data to the workflow.
+   */
   url: string;
   then: Promise<Request>['then'];
   [Symbol.asyncIterator](): AsyncIterableIterator<Request>;

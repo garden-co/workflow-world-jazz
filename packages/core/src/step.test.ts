@@ -1,9 +1,9 @@
 import { createContext } from '@vercel/workflow-vm';
+import type { Event } from '@vercel/workflow-world';
 import { monotonicFactory } from 'ulid';
 import { describe, expect, it, vi } from 'vitest';
-import type { Event } from './world/index.js';
 import { EventsConsumer } from './events-consumer.js';
-import { FatalError, StepsNotRunError } from './global.js';
+import { FatalError, WorkflowSuspension } from './global.js';
 import type { WorkflowOrchestratorContext } from './private.js';
 import { createUseStep } from './step.js';
 
@@ -93,12 +93,12 @@ describe('createUseStep', () => {
     } catch (err_) {
       error = err_ as Error;
     }
-    expect(error).toBeInstanceOf(StepsNotRunError);
-    expect((error as StepsNotRunError).message).toBe(
+    expect(error).toBeInstanceOf(WorkflowSuspension);
+    expect((error as WorkflowSuspension).message).toBe(
       '1 steps have not been run yet'
     );
-    expect(ctx.invocationsQueue).toEqual((error as StepsNotRunError).steps);
-    expect((error as StepsNotRunError).steps).toMatchInlineSnapshot(`
+    expect(ctx.invocationsQueue).toEqual((error as WorkflowSuspension).steps);
+    expect((error as WorkflowSuspension).steps).toMatchInlineSnapshot(`
       [
         {
           "args": [
@@ -136,12 +136,12 @@ describe('createUseStep', () => {
     } catch (err_) {
       error = err_ as Error;
     }
-    expect(error).toBeInstanceOf(StepsNotRunError);
-    expect((error as StepsNotRunError).message).toBe(
+    expect(error).toBeInstanceOf(WorkflowSuspension);
+    expect((error as WorkflowSuspension).message).toBe(
       '3 steps have not been run yet'
     );
-    expect(ctx.invocationsQueue).toEqual((error as StepsNotRunError).steps);
-    expect((error as StepsNotRunError).steps).toMatchInlineSnapshot(`
+    expect(ctx.invocationsQueue).toEqual((error as WorkflowSuspension).steps);
+    expect((error as WorkflowSuspension).steps).toMatchInlineSnapshot(`
       [
         {
           "args": [

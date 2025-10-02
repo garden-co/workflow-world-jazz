@@ -1,0 +1,110 @@
+---
+title: getWebhook
+---
+
+import { generateDefinition } from "@/lib/tsdoc"
+
+# `getWebhook()`
+
+Registers a webhook URL that external systems can call to provide data to a running workflow.
+
+This is especially useful for human-in-the-loop scenarios with AI agents or waiting for external events.
+
+```ts lineNumbers
+import { getWebhook } from "@vercel/workflow-core"
+
+export async function webhookWorkflow() {
+  "use workflow";
+  
+  const webhook = getWebhook();  // [!code highlight]
+
+  await someBackgroundTask({ callbackUrl: webhook.url });
+
+  const req = await webhook; // Wait for webhook to be called
+
+  // Do something with the request
+}
+```
+
+## API Signature
+
+### Parameters
+
+<TSDoc
+definition={generateDefinition({
+  code: `
+import { getWebhook } from "@vercel/workflow-core";
+export default getWebhook;`
+})}
+showSections={['parameters']}
+/>
+
+#### WebhookOptions
+
+<TSDoc
+definition={generateDefinition({
+  code: `
+import type { WebhookOptions } from "@vercel/workflow-core";
+export default WebhookOptions;`
+})}
+/>
+
+### Returns
+
+<TSDoc
+definition={generateDefinition({
+  code: `
+import { getWebhook } from "@vercel/workflow-core";
+export default getWebhook;`
+})}
+showSections={['returns']}
+/>
+
+#### Webhook
+
+<TSDoc
+definition={generateDefinition({
+  code: `
+import type { Webhook } from "@vercel/workflow-core";
+export default Webhook;`
+})}
+/>
+
+The returned `Webhook` object also implements `AsyncIterable<Request>`, which allows you to iterate over incoming requests using `for await...of` syntax.
+
+## Examples
+
+Here's a simple example of how you can use `getWebhook` inside your workflow.
+
+```typescript lineNumbers
+import { getWebhook } from "@vercel/workflow-core"
+
+export async function webhookWorkflow() {
+  "use workflow";
+  
+  const webhook = getWebhook({ // [!code highlight]
+    url: "/api/webhook", // [!code highlight]
+    method: ["GET", "PUT", "POST", "HEAD", "PATCH", "DELETE", "OPTIONS"], // [!code highlight]
+  }); // [!code highlight]
+
+  while (true) {
+    const req = await webhook;
+    console.log("received request", {
+      method: req.method,
+      url: req.url,
+      body: await req.json(),
+      headers: Object.fromEntries(req.headers),
+    });
+
+    if (req.method === "DELETE") {
+      break;
+    }
+  }
+}
+```
+
+In this example, we create a workflow that uses the `getWebhook` function that accepts  various HTTP methods. The webhook URL can be called by some external system to send data to our running workflow.
+
+The workflow then suspends while it waits for incoming requests at the webhook URL. During this time, no resources are being used.
+
+Once we encounter a `DELETE` request, we break out of the loop and exit the workflow.

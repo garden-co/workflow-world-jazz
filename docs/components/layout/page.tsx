@@ -1,16 +1,16 @@
 'use client';
-import {
-  type PageTree,
-  type TableOfContents,
-  type TOCItemType,
-} from 'fumadocs-core/server';
-import { type ComponentProps, type ReactNode, useMemo, Fragment } from 'react';
-import { AnchorProvider, useActiveAnchors } from 'fumadocs-core/toc';
-import { cn } from '../../lib/cn';
-import { useTreeContext } from 'fumadocs-ui/contexts/tree';
-import { Link } from 'fumadocs-core/framework';
-import { usePathname } from 'next/navigation';
 import { useBreadcrumb } from 'fumadocs-core/breadcrumb';
+import { Link } from 'fumadocs-core/framework';
+import type {
+  PageTree,
+  TableOfContents,
+  TOCItemType,
+} from 'fumadocs-core/server';
+import { AnchorProvider, useActiveAnchors } from 'fumadocs-core/toc';
+import { useTreeContext } from 'fumadocs-ui/contexts/tree';
+import { usePathname } from 'next/navigation';
+import { type ComponentProps, Fragment, type ReactNode, useMemo } from 'react';
+import { cn } from '../../lib/cn';
 import { CopyPageAsMarkdown } from '../copy-page-markdown';
 
 export interface DocsPageProps {
@@ -176,7 +176,7 @@ function Footer() {
   }, [flatten, pathname]);
 
   return (
-    <div className="flex flex-row justify-between gap-8 mt-16 pt-8 border-t border-border/40">
+    <div className="flex flex-row justify-between gap-8 mt-16 pt-8 border-t">
       {previous ? (
         <Link
           href={previous.url}

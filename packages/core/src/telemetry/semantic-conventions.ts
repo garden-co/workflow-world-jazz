@@ -37,8 +37,7 @@
  * @packageDocumentation
  */
 
-import type { WorkflowRun } from '../world/runs.js';
-import type { Step } from '../world/steps.js';
+import type { WorkflowRun, Step } from '@vercel/workflow-world';
 
 /**
  * Creates a semantic convention function that returns an attribute object.

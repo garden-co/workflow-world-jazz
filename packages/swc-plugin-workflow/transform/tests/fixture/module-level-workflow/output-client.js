@@ -1,12 +1,13 @@
 import { start as __private_workflow_start } from "@vercel/workflow-core/runtime";
+/**__internal_workflows{"workflows":{"input.js":{"arrowWorkflow":{"workflowId":"workflow-input-js-arrowWorkflow"},"workflow":{"workflowId":"workflow-input-js-workflow"}}}}*/;
 const localArrow = async (input)=>{
     return input.bar;
 };
 export async function workflow(input) {
-    return __private_workflow_start("workflow", [
-        input
-    ]);
+    return input.foo;
 }
-export const arrowWorkflow = async (input)=>__private_workflow_start("arrowWorkflow", [
-        input
-    ]);
+workflow.workflowId = "workflow-input-js-workflow";
+export const arrowWorkflow = async (input)=>{
+    return input.bar;
+};
+arrowWorkflow.workflowId = "workflow-input-js-arrowWorkflow";

@@ -1,4 +1,5 @@
 import { registerStepFunction } from "@vercel/workflow-core/private";
+/**__internal_workflows{"steps":{"input.js":{"badStep":{"stepId":"step-input-js-badStep"}}}}*/;
 export async function badStep() {
     const x = 42;
     // Error: directive must be at the top of function
@@ -11,4 +12,4 @@ export const badWorkflow = async ()=>{
     'use workflow';
     return true;
 };
-registerStepFunction(badStep);
+registerStepFunction("step-input-js-badStep", badStep);

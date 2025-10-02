@@ -3,7 +3,10 @@ import enhancedResolveOrig from 'enhanced-resolve';
 import type { Plugin } from 'esbuild';
 import { relative } from 'path';
 import { promisify } from 'util';
-import { applySwcTransform } from './apply-swc-transform.js';
+import {
+  applySwcTransform,
+  type WorkflowManifest,
+} from './apply-swc-transform.js';
 import {
   jsTsRegex,
   parentHasChild,
@@ -15,6 +18,7 @@ export interface SwcPluginOptions {
   outdir?: string;
   tsPaths?: Record<string, string[]>;
   tsBaseUrl?: string;
+  workflowManifest?: WorkflowManifest;
 }
 
 const NODE_RESOLVE_OPTIONS = {
@@ -127,17 +131,30 @@ export function createSwcPlugin(options: SwcPluginOptions): Plugin {
             loader = 'jsx';
           }
           const source = await readFile(args.path, 'utf8');
-          const transformedCode = await applySwcTransform(
-            args.path,
-            source,
-            options.mode,
-            // we need to provide the tsconfig/jsconfig
-            // alias via swc so that we can resolve them
-            // with our custom resolve logic
-            {
-              paths: options.tsPaths,
-              baseUrl: options.tsBaseUrl,
-            }
+          const { code: transformedCode, workflowManifest } =
+            await applySwcTransform(
+              args.path,
+              source,
+              options.mode,
+              // we need to provide the tsconfig/jsconfig
+              // alias via swc so that we can resolve them
+              // with our custom resolve logic
+              {
+                paths: options.tsPaths,
+                baseUrl: options.tsBaseUrl,
+              }
+            );
+
+          if (!options.workflowManifest) {
+            options.workflowManifest = {};
+          }
+          options.workflowManifest.workflows = Object.assign(
+            options.workflowManifest.workflows || {},
+            workflowManifest.workflows
+          );
+          options.workflowManifest.steps = Object.assign(
+            options.workflowManifest.steps || {},
+            workflowManifest.steps
           );
 
           return {

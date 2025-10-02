@@ -1,9 +1,13 @@
-import { getContext, getWebhook } from '@vercel/workflow-core';
+import {
+  getStepContext,
+  getWebhook,
+  getWorkflowContext,
+} from '@vercel/workflow-core';
 import OpenAI from 'openai';
 import { z } from 'zod';
 
 /**
- * `getContext()` is a hook that allows you to access the context
+ * `getStepContext()` is a hook that allows you to access the step's context
  * of the current workflow run.
  *
  * It is useful for accessing the context of the current workflow run, such as
@@ -11,7 +15,7 @@ import { z } from 'zod';
  */
 async function stepWithGetContext() {
   'use step';
-  const ctx = getContext();
+  const ctx = getStepContext();
   console.log('step context', ctx);
 
   // Mimic a retryable error 50% of the time (so that the `attempt` counter increases)
@@ -20,9 +24,9 @@ async function stepWithGetContext() {
   }
 }
 
-export async function withGetContext() {
+export async function withWorkflowContext() {
   'use workflow';
-  const ctx = getContext();
+  const ctx = getWorkflowContext();
   console.log('workflow context', ctx);
 
   await stepWithGetContext();
