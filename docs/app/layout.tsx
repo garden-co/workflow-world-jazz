@@ -1,8 +1,8 @@
 import '@/app/global.css';
-import { baseOptions } from '@/lib/layout.shared';
-import { HomeLayout } from '@/components/layout/home';
 import { RootProvider } from 'fumadocs-ui/provider';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { HomeLayout } from '@/components/layout/home';
+import { baseOptions } from '@/lib/layout.shared';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -39,7 +39,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           }}
         >
           <HomeLayout
-            themeSwitch={{ enabled: false }}
             {...baseOptions()}
             links={[
               {

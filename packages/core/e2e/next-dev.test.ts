@@ -1,14 +1,10 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { afterEach, describe, expect, test } from 'vitest';
+import { getWorkbenchAppPath } from './utils';
 
 describe('dev e2e', () => {
-  const appName = process.env.APP_NAME;
-
-  if (!appName) {
-    throw new Error(`Missing "APP_NAME" env variable`);
-  }
-  const appPath = path.join(process.cwd(), 'workbench', appName);
+  const appPath = getWorkbenchAppPath();
   const generatedStep = path.join(
     appPath,
     'app',

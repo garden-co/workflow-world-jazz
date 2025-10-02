@@ -2,11 +2,8 @@ import { Args, Flags } from '@oclif/core';
 import { BaseCommand } from '../base.js';
 import { VercelBuildOutputAPIBuilder } from '../lib/builders/vercel-build-output-api.js';
 import { VercelStaticBuilder } from '../lib/builders/vercel-static.js';
-import {
-  type BuildTarget,
-  isValidBuildTarget,
-  type WorkflowConfig,
-} from '../lib/config/types.js';
+import { type BuildTarget, isValidBuildTarget } from '../lib/config/types.js';
+import { getWorkflowConfig } from '../lib/config/workflow-config.js';
 
 export default class Build extends BaseCommand {
   static description = 'Build workflow bundles for deployment';
@@ -23,6 +20,11 @@ export default class Build extends BaseCommand {
       description: 'build target',
       options: ['vercel-static', 'vercel-build-output-api'],
       default: 'vercel-static',
+    }),
+    'workflow-manifest': Flags.string({
+      char: 'm',
+      description: 'output location for workflow manifest',
+      default: '',
     }),
   };
 
@@ -45,6 +47,15 @@ export default class Build extends BaseCommand {
       );
     }
 
+    if (
+      flags['workflow-manifest'] &&
+      !flags['workflow-manifest'].match(/\.(json|js|cjs|mjs)$/)
+    ) {
+      throw new Error(
+        `Invalid --workflow-manifest provided, must end in .json or .js. Received: ${flags['workflow-manifest']}`
+      );
+    }
+
     // Validate build target
     if (!isValidBuildTarget(buildTarget)) {
       this.logWarn(
@@ -56,17 +67,10 @@ export default class Build extends BaseCommand {
 
     this.logInfo(`Using target: ${buildTarget}`);
 
-    // Create configuration
-    const config: WorkflowConfig = {
-      dirs: ['./workflows'],
-      workingDir: process.cwd(),
+    const config = getWorkflowConfig({
       buildTarget: buildTarget as BuildTarget,
-      stepsBundlePath: './.well-known/workflow/v1/step.js',
-      workflowsBundlePath: './.well-known/workflow/v1/flow.js',
-
-      // WIP: generate a client library to easily execute workflows/steps
-      // clientBundlePath: './lib/generated/workflows.js',
-    };
+      workflowManifest: flags['workflow-manifest'],
+    });
 
     try {
       // Build using appropriate builder
@@ -85,7 +89,9 @@ export default class Build extends BaseCommand {
       this.logInfo('Build completed successfully!');
     } catch (error) {
       this.error(
-        `Build failed: ${error instanceof Error ? error.message : String(error)}`
+        `Build failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`
       );
     }
   }

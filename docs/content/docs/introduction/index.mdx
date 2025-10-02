@@ -1,24 +1,26 @@
 ---
-title: Workflow SDK by Vercel
+title: Workflow SDK
 ---
 
 # Workflow SDK
 
-The Workflow SDK is a TypeScript framework for building durable, reliable, and observable applications that keep running through failures and random restarts.
+The Workflow SDK is a TypeScript framework to easily build durable, reliable, and observable applications and AI agents.
 
-It can power anything from AI agents to data pipelines, media processing, billing, and CI/CD flows. You can check out some of these applications in [Examples](/docs/examples).
+Workflows are a powerful primitive to power anything from data pipelines, AI agents, media processing jobs, billing and subscriptions, CI/CD flows, and everything in between.
+
+Check out the [examples](/examples) for more inspiration.
 
 ---
 
-## Why use the Workflow SDK?
+## Why use Workflow SDK?
 
-Building reliable long-running processes is hard. You'll need to handle failures, manage retries, persist state, coordinate distributed operations, and deal with timeouts. Traditional approaches require complex infrastructure and careful state management.
+Building reliable long-running processes is hard. You'll need to handle failures, manage retries, persist state, wire up queues, coordinate distributed operations, and deal with timeouts. Traditional approaches require complex infrastructure and careful state management.
 
-The Workflow SDK eliminates these complexities by providing durable functions that automatically persist progress and replay on failures. This allows developers to write resilient workflows using familiar async/await patterns, without worrying about infrastructure details.
+The Workflow SDK eliminates these complexities by providing durable functions that automatically persist progress, retry failures, and track progress for observability. This allows developers to write resilient workflows using **familiar async/await patterns**, without worrying about infrastructure details.
 
-For example, here's how you can build a simple order processing workflow that survives errors:
+For example, here's a simple order processing workflow powered by workflow.
 
-```typescript
+```typescript title="workflow.ts"
 import { sleep, getWebhook } from "workflow"
 
 export async function fulfillOrder(orderId: string) {

@@ -1,6 +1,6 @@
 import * as devalue from 'devalue';
+import { getWorld } from './runtime/world.js';
 import { STREAM_NAME_SYMBOL, STREAM_TYPE_SYMBOL } from './symbols.js';
-import { world } from './world/index.js';
 
 /**
  * Detect if a readable stream is a byte stream.
@@ -75,6 +75,7 @@ export class WorkflowServerReadableStream extends ReadableStream<Uint8Array> {
       pull: async (controller) => {
         let reader = this.#reader;
         if (!reader) {
+          const world = getWorld();
           const stream = await world.readFromStream(name, startIndex);
           reader = this.#reader = stream.getReader();
         }
@@ -97,6 +98,7 @@ export class WorkflowServerReadableStream extends ReadableStream<Uint8Array> {
 
 export class WorkflowServerWritableStream extends WritableStream<Uint8Array> {
   constructor(name: string) {
+    const world = getWorld();
     super({
       write: async (chunk: string | Uint8Array | Buffer) => {
         await world.writeToStream(name, chunk);
@@ -661,9 +663,13 @@ export function dehydrateWorkflowArguments(
  */
 export function hydrateWorkflowArguments(
   value: Parameters<typeof devalue.unflatten>[0],
-  global: Record<string, any>
+  global: Record<string, any> = globalThis,
+  extraRevivers: Record<string, (value: any) => any> = {}
 ) {
-  const obj = devalue.unflatten(value, getWorkflowRevivers(global));
+  const obj = devalue.unflatten(value, {
+    ...getWorkflowRevivers(global),
+    ...extraRevivers,
+  });
   return obj;
 }
 
@@ -677,7 +683,7 @@ export function hydrateWorkflowArguments(
  */
 export function dehydrateWorkflowReturnValue(
   value: unknown,
-  global: Record<string, any>
+  global: Record<string, any> = globalThis
 ) {
   const str = devalue.stringify(value, getWorkflowReducers(global));
   return revive(str);
@@ -695,9 +701,13 @@ export function dehydrateWorkflowReturnValue(
 export function hydrateWorkflowReturnValue(
   value: Parameters<typeof devalue.unflatten>[0],
   ops: Promise<any>[],
-  global: Record<string, any> = globalThis
+  global: Record<string, any> = globalThis,
+  extraRevivers: Record<string, (value: any) => any> = {}
 ) {
-  const obj = devalue.unflatten(value, getExternalRevivers(global, ops));
+  const obj = devalue.unflatten(value, {
+    ...getExternalRevivers(global, ops),
+    ...extraRevivers,
+  });
   return obj;
 }
 
@@ -729,9 +739,13 @@ export function dehydrateStepArguments(
 export function hydrateStepArguments(
   value: Parameters<typeof devalue.unflatten>[0],
   ops: Promise<any>[],
-  global: Record<string, any> = globalThis
+  global: Record<string, any> = globalThis,
+  extraRevivers: Record<string, (value: any) => any> = {}
 ) {
-  const obj = devalue.unflatten(value, getStepRevivers(global, ops));
+  const obj = devalue.unflatten(value, {
+    ...getStepRevivers(global, ops),
+    ...extraRevivers,
+  });
   return obj;
 }
 
@@ -763,8 +777,12 @@ export function dehydrateStepReturnValue(
  */
 export function hydrateStepReturnValue(
   value: Parameters<typeof devalue.unflatten>[0],
-  global: Record<string, any>
+  global: Record<string, any> = globalThis,
+  extraRevivers: Record<string, (value: any) => any> = {}
 ) {
-  const obj = devalue.unflatten(value, getWorkflowRevivers(global));
+  const obj = devalue.unflatten(value, {
+    ...getWorkflowRevivers(global),
+    ...extraRevivers,
+  });
   return obj;
 }

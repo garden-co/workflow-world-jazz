@@ -4,49 +4,16 @@ title: API Reference
 
 # API Reference
 
-All the functions and primitives that come with the Workflow SDK.
-
----
-
-## Core Functions
-
-Workflow SDK Core contains the following core functions you can use inside your workflow functions:
+All the functions and primitives that come with the Workflow SDK by package.
 
 <Cards>
-    <Card href="/docs/workflow-sdk-core/get-context" title="getContext()">
-        A function that returns context about the current workflow or step execution.
+    <Card title="@vercel/workflow-core" href="/docs/api-reference/vercel-workflow-core">
+        Core workflow primitives including steps, context management, streaming, webhooks, and error handling.
     </Card>
-    <Card href="/docs/workflow-sdk-core/sleep" title="sleep()">
-        Sleeping workflows for a specified duration. Deterministic and replay-safe.
+    <Card title="@vercel/workflow-ai" href="/docs/api-reference/vercel-workflow-ai">
+        Helpers for integrating AI SDK for building AI-powered workflows.
     </Card>
-    <Card href="/docs/workflow-sdk-core/get-webhook" title="getWebhook()">
-        Registers a webhook URL that can be used to invoke a workflow.
-    </Card>
-</Cards>
-
----
-
-## Runtime Functions
-
-Workflow SDK Core also provides runtime functions that are used outside of workflow and step functions. These are accessed from the runtime entrypoint (e.g. where `start(workflowFn)` is called):
-
-<Cards>
-    <Card href="/docs/workflow-sdk-core/create-workflow-output-stream" title="getWorkflowOutputStream()">
-        Retrieves the implicit readable stream for a workflow run.
-    </Card>
-</Cards>
-
----
-
-## Error Classes
-
-Workflow SDK Core includes error classes that can be thrown in a workflow or step to change the error exit strategy of a workflow.
-
-<Cards>
-    <Card href="/docs/workflow-sdk-core/error-handling#fatal-error" title="FatalError()">
-        When thrown, marks a step as failed and the step is not retried.
-    </Card>
-    <Card href="/docs/workflow-sdk-core/error-handling#retryable-error" title="RetryableError()">
-        When thrown, marks a step as retryable with an optional parameter.
+    <Card title="@vercel/workflow-next" href="/docs/api-reference/vercel-workflow-next">
+        Next.js integration for Workflow SDK that automatically configures bundling and runtime support.
     </Card>
 </Cards>

@@ -1,0 +1,193 @@
+---
+title: getWorkflowReadableStream
+---
+
+import { generateDefinition } from "@/lib/tsdoc"
+
+# `getWorkflowReadableStream()`
+
+Retrieves the workflow run's default readable stream, which reads chunks written to the corresponding writable stream [`getWorkflowWritableStream`](/docs/api-reference/get-workflow-writable-stream). This function is used outside of the workflow context to consume streaming data from a running or completed workflow.
+
+You should use this function to read real-time streaming output from workflows in your API routes, server components, or other runtime environments.
+
+<Callout type="warn">
+This function can only be called outside of workflow functions (in runtime environments, API routes, etc.)
+</Callout>
+
+```typescript lineNumbers
+import { getWorkflowReadableStream } from '@vercel/workflow-core/runtime';
+
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const runId = url.searchParams.get('runId');
+
+  if (!runId) {
+    return new Response('No runId provided', { status: 400 });
+  }
+
+  const stream = getWorkflowReadableStream(runId); // [!code highlight]
+
+  return new Response(stream, {
+      headers: { 'Content-Type': 'application/octet-stream' }
+  });
+}
+```
+
+## API Signature
+
+### Parameters
+
+<TSDoc
+definition={generateDefinition({
+  code: `
+import { getWorkflowReadableStream } from '@vercel/workflow-core/runtime';
+export default getWorkflowReadableStream;`
+})}
+showSections={['parameters']}
+/>
+
+#### WorkflowReadableStreamOptions
+
+<TSDoc
+definition={generateDefinition({
+  code: `
+import type { WorkflowReadableStreamOptions } from '@vercel/workflow-core/runtime';
+export default WorkflowReadableStreamOptions;`
+})}
+/>
+
+### Returns
+
+<TSDoc
+definition={generateDefinition({
+  code: `
+import { getWorkflowReadableStream } from '@vercel/workflow-core/runtime';
+export default getWorkflowReadableStream;`
+})}
+showSections={['returns']}
+/>
+
+Returns a `ReadableStream<R>` where `R` is the type of data you plan to read from the stream.
+
+## Good to Know
+
+- The `runId` must correspond to an active or completed workflow that uses [`getWorkflowWritableStream`](/docs/api-reference/vercel-workflow-core/get-workflow-writable-stream).
+- Use `startIndex` to resume reading from a specific point in the stream.
+
+## Examples
+
+### Basic API Route Streaming
+
+Here's a simple example of streaming workflow output in an API route:
+
+```typescript lineNumbers
+import { getWorkflowReadableStream } from '@vercel/workflow-core/runtime';
+
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const runId = url.searchParams.get('runId');
+
+  if (!runId) {
+    return new Response('No runId provided', { status: 400 });
+  }
+
+  // Get the workflow's readable stream
+  const stream = getWorkflowReadableStream(runId); // [!code highlight]
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'application/octet-stream',
+    },
+  });
+}
+```
+
+### AI Chat Streaming with AI SDK
+
+Stream AI chat responses using typed streams:
+
+```typescript lineNumbers
+import { getWorkflowReadableStream } from '@vercel/workflow-core/runtime';
+import { createUIMessageStreamResponse, type UIMessageChunk } from 'ai';
+
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const { searchParams } = new URL(request.url);
+
+  // Support resuming from a specific index
+  const startIndexParam = searchParams.get('startIndex');
+  const startIndex = startIndexParam !== null
+    ? parseInt(startIndexParam, 10)
+    : undefined;
+
+  return createUIMessageStreamResponse({
+    stream: getWorkflowReadableStream<UIMessageChunk>(id, { startIndex }), // [!code highlight]
+  });
+}
+```
+
+### Starting a Workflow and Streaming
+
+Combine workflow starting with immediate streaming:
+
+```typescript lineNumbers
+import { getWorkflowReadableStream } from '@vercel/workflow-core/runtime';
+import { createUIMessageStreamResponse, type UIMessage, type UIMessageChunk } from 'ai';
+import { chat } from '@/workflows/chat';
+
+export async function POST(req: Request) {
+  const { messages }: { messages: UIMessage[] } = await req.json();
+
+  // Start the workflow
+  const workflowHandle = await start(chat, [messages]);
+  const workflowRunId = workflowHandle.runId;
+
+  return createUIMessageStreamResponse({
+    stream: getWorkflowReadableStream<UIMessageChunk>(workflowRunId), // [!code highlight]
+    headers: {
+      // Return the run ID for client-side tracking
+      'x-workflow-run-id': workflowRunId,
+    },
+  });
+}
+```
+
+### Stream Resumption
+
+Resume reading from a specific point in the stream:
+
+```typescript lineNumbers
+import { getWorkflowReadableStream } from '@vercel/workflow-core/runtime';
+
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const runId = url.searchParams.get('runId');
+  const startIndexParam = url.searchParams.get('startIndex');
+
+  if (!runId) {
+    return new Response('No runId provided', { status: 400 });
+  }
+
+  // Parse the starting index for resumption
+  const startIndex = startIndexParam !== null
+    ? parseInt(startIndexParam, 10)
+    : undefined;
+
+  const stream = getWorkflowReadableStream(runId, {  // [!code highlight]
+    startIndex, // Resume from this chunk index  // [!code highlight]
+  }); // [!code highlight]
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'application/octet-stream',
+    },
+  });
+}
+```
+
+## Related Functions
+
+- [`getWorkflowWritableStream()`](/docs/api-reference/get-workflow-writable-stream) - Used inside workflows to write data that this function reads.

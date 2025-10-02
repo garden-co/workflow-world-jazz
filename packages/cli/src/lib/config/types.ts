@@ -5,6 +5,14 @@ export const validBuildTargets = [
 ] as const;
 export type BuildTarget = (typeof validBuildTargets)[number];
 
+export type InspectCLIOptions = {
+  json?: boolean;
+  watch?: boolean;
+  runId?: string;
+  stepId?: string;
+  cursor?: string;
+};
+
 export interface WorkflowConfig {
   watch?: boolean;
   dirs: string[];
@@ -20,6 +28,8 @@ export interface WorkflowConfig {
   clientBundlePath?: string;
 
   externalPackages?: string[];
+
+  workflowManifestPath?: string;
 }
 
 export function isValidBuildTarget(

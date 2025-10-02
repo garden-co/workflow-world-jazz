@@ -4,22 +4,138 @@ title: Troubleshooting
 
 # Troubleshooting
 
-Fix common mistakes with creating with workflows in the Workflow SDK.
+Fix common mistakes when creating and executing workflows in the Workflow SDK.
 
-<Cards>
-  <Card href="/docs/troubleshooting/build-issues" title="Build Issues">
-    Common problems when creating workflows.
-  </Card>
-  <Card href="/docs/troubleshooting/build-issues" title="Runtime Errors">
-    Common problems when executing workflows.
-  </Card>
-</Cards>
+<Callout type="info">
+This troubleshooting guide is actively being expanded as Workflow SDK matures during the beta period.
+</Callout>
+
+## Build Issues
+
+### Workflows Not Detected
+
+When workflows aren't being invoked or built during local development or in a production environment, verify that you are using the `"use workflow"` and `"use step"` directives appropriately.
+
+For workflow functions:
+
+```ts lineNumbers
+// Correct - includes directive
+export async function orderWorkflow(orderId: string) {
+  "use workflow"; // [!code highlight]
+  // workflow logic
+}
+
+// Wrong - missing directive
+export async function orderWorkflow(orderId: string) {
+  // workflow logic
+}
+```
+
+For step functions:
+
+```typescript lineNumbers
+// Correct - includes directive
+export async function emailOrder(orderId: string, email: string) {
+  "use step"; // [!code highlight]
+  // step logic
+}
+
+// Wrong - missing directive
+export async function emailOrder(orderId: string, email: string) {
+  // step logic
+}
+```
+
+Make sure you've wrapped the Next.js configuration with the `withWorkflow` plugin:
+
+```ts lineNumbers title="next.config.ts"
+import { withWorkflow } from '@vercel/workflow-next'; // [!code highlight]
+
+const nextConfig = {
+  // your config
+};
+
+export default withWorkflow(nextConfig); // [!code highlight]
+```
+
+---
+
+## Runtime Issues
+
+### Context Function Errors
+
+Functions like `getStepContext`, and `sleep` from the Workflow SDK Core package depend on the execution context (i.e. *where* the function is executed).
+
+#### Accessing Context
+
+Workflow SDK Core provides the following functions for accessing context:
+
+* [`getWorkflowContext`](/docs/api-reference/vercel-workflow-core/get-workflow-context)
+* [`getStepContext`](/docs/api-reference/vercel-workflow-core/get-step-context).
+
+Trying to call `getStepContext` inside a workflow function isn't possible since no current executing step exists.
+
+```ts
+import { getWorkflowContext, getStepContext } from "@vercel/workflow-core"
+
+// getWorkflowContext() - available in workflow and step functions
+export async function myWorkflow() {
+    "use workflow";
+
+    const ctx = getWorkflowContext();
+    console.log(ctx.workflowRunId) // Valid
+
+    await testStep();
+
+    const stepCtx = getStepContext() // Invalid, outside execution context
+}
+
+async function testStep() {
+    "use step"
+
+    const ctx = getStepContext()
+    console.log(ctx.stepId)        // Valid, within scope of a step function
+}
+```
+
+### Violating Determinism in Workflows
+
+Workflow functions must contain deterministic behavior in order for the workflow to precisely resume state after some interruption (e.g. through errors, or suspending through `sleep`).
+
+Using non-deterministic functions inside workflow functions directly can have un-predictable behavior.
+
+If non-deterministic behavior is intended, it's important to move that to step functions.
+
+```typescript lineNumbers
+// Bad - in workflow
+export async function myWorkflow() {
+  "use workflow";
+  const id = Math.random(); // Seeded per workflow
+  const now = Date.now();   // Fixed (then incremented)
+}
+
+// Good - in step
+async function generateId() {
+  "use step";
+  return Math.random(); // Unseeded, normal behavior
+}
+
+export async function myWorkflow() {
+  "use workflow";
+  const id = await generateId();
+}
+```
+
+From this example:
+
+* `Math.random()` is seeded per workflow in order to ensure determinism.
+* `Date.now()` is fixed then incremented throughout the lifetime of the workflow after completed steps.
 
 ---
 
 ## Resources
 
 - [API Reference](/docs/api-reference) - Complete API documentation
-- [Concepts](/docs/concepts) - Architecture and core concepts
+- [Concepts](/docs/foundations/concepts) - Architecture and core concepts
 - [Examples](https://github.com/vercel/workflow) - Sample implementations
 - [GitHub Issues](https://github.com/vercel/workflow/issues) - Report bugs and request features

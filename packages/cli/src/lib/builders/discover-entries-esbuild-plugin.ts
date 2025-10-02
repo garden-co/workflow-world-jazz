@@ -82,7 +82,7 @@ export function createDiscoverEntriesPlugin(state: {
             state.discoveredSteps.push(args.path);
           }
 
-          const transformedCode = await applySwcTransform(
+          const { code: transformedCode } = await applySwcTransform(
             args.path,
             source,
             false

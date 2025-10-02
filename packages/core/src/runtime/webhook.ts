@@ -1,7 +1,6 @@
 import { waitUntil } from '@vercel/functions';
+import type { Webhook } from '@vercel/workflow-world';
 import { Ajv2020, type ValidateFunction } from 'ajv/dist/2020.js';
-import { world } from '../world/index.js';
-import type { Webhook } from '../world/index.js';
 import type { WorkflowInvokePayload } from '../schemas.js';
 import { dehydrateStepReturnValue } from '../serialization.js';
 import { WebhookHandlersTriggered } from '../telemetry/semantic-conventions.js';
@@ -10,6 +9,7 @@ import {
   getSpanContextForTraceCarrier,
   trace,
 } from '../telemetry.js';
+import { getWorld } from './world.js';
 
 const ajv = new Ajv2020({ strict: false });
 
@@ -19,6 +19,7 @@ async function* webhooksIterator(
 ): AsyncGenerator<Webhook> {
   const url = new URL(request.url);
   const webhookId = url.searchParams.get('webhookId');
+  const world = getWorld();
   if (webhookId) {
     const webhook = await world.webhooks.get(`wbhk_${webhookId}`, deploymentId);
     yield webhook;
@@ -128,6 +129,7 @@ async function processWebhook(
     }
 
     try {
+      const world = getWorld();
       // Create a workflow run event
       const ops: Promise<any>[] = [];
       await world.events.create(webhook.runId, {
@@ -229,6 +231,7 @@ export async function handleWebhook(
   request: Request,
   body?: any
 ): Promise<Response> {
+  const world = getWorld();
   const deploymentId = await world.getDeploymentId();
   if (!deploymentId) {
     // This should not happen when running inside Vercel Functions

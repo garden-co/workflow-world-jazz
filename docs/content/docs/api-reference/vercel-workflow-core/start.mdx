@@ -1,0 +1,82 @@
+---
+title: start
+---
+
+import { generateDefinition } from "@/lib/tsdoc"
+
+# `start()`
+
+Start/enqueue a new workflow run.
+
+```typescript lineNumbers
+import { start } from '@vercel/workflow-core/runtime';
+
+const run = await start('myWorkflow'); // [!code highlight]
+```
+
+## API Signature
+
+### Parameters
+
+<TSDoc
+definition={generateDefinition({
+  code: `
+import { start } from "@vercel/workflow-core/runtime";
+export default start;`
+})}
+showSections={['parameters']}
+/>
+
+#### StartOptions
+
+<TSDoc
+definition={generateDefinition({
+  code: `
+import type { StartOptions } from "@vercel/workflow-core/runtime";
+export default StartOptions;`
+})}
+/>
+
+### Returns
+
+Returns a `Promise<WorkflowRun>` object that resolves to:
+
+<TSDoc
+definition={generateDefinition({
+  code: `
+import type { WorkflowRun } from '@vercel/workflow-core/runtime';
+export default WorkflowRun;`
+})}
+showSections={['returns']}
+/>
+
+- `runId`: The unique run ID for the newly started workflow invocation
+- `status`: The current status of the workflow run
+- Other workflow run metadata
+
+## Good to Know
+
+- The `start()` function is used in runtime/non-workflow contexts to programmatically trigger workflow executions.
+- This is different from calling workflow functions directly, which is the typical pattern in Next.js applications.
+- The function returns immediately after enqueuing the workflow - it doesn't wait for the workflow to complete.
+- All arguments must be [serializable](/docs/how-it-works/workflow-functions#serialization).
+
+## Examples
+
+### With Arguments
+
+```typescript
+import { start } from '@vercel/workflow-core/runtime';
+
+const run = await start('userSignup', ['user@example.com']); // [!code highlight]
+```
+
+### With `StartOptions`
+
+```typescript
+import { start } from '@vercel/workflow-core/runtime';
+
+const run = await start('myWorkflow', ['arg1', 'arg2'], { // [!code highlight]
+  deploymentId: 'custom-deployment-id' // [!code highlight]
+}); // [!code highlight]
+```

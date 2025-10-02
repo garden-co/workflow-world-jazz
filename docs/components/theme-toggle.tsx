@@ -1,21 +1,18 @@
 'use client';
 import { cva } from 'class-variance-authority';
-import { Moon, Sun, Airplay } from 'lucide-react';
+import { Airplay, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { type HTMLAttributes, useLayoutEffect, useState } from 'react';
 import { cn } from '../lib/cn';
 
-const itemVariants = cva(
-  'size-6.5 rounded-full p-1.5 text-fd-muted-foreground',
-  {
-    variants: {
-      active: {
-        true: 'bg-fd-accent text-fd-accent-foreground',
-        false: 'text-fd-muted-foreground',
-      },
+const itemVariants = cva('size-6.5 rounded p-1.5 text-fd-muted-foreground', {
+  variants: {
+    active: {
+      true: 'bg-fd-accent text-fd-accent-foreground',
+      false: 'text-fd-muted-foreground',
     },
-  }
-);
+  },
+});
 
 const full = [
   ['light', Sun] as const,
@@ -38,7 +35,7 @@ export function ThemeToggle({
   }, []);
 
   const container = cn(
-    'inline-flex items-center rounded-full border p-1',
+    'inline-flex items-center rounded-sm border p-1 gap-0.5',
     className
   );
 

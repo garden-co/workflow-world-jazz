@@ -1,16 +1,16 @@
 import { waitUntil } from '@vercel/functions';
-import { world } from './world/index.js';
-import type { Event } from './world/index.js';
+import type { Event, WorkflowRun } from '@vercel/workflow-world';
+import { WorkflowAPIError } from '@vercel/workflow-world-vercel';
 import {
-  WorkflowAPIError,
   WorkflowRunFailedError,
   WorkflowRunNotCompletedError,
   WorkflowRuntimeError,
 } from './errors.js';
-import type { WorkflowContext } from './get-context.js';
-import { FatalError, RetryableError, StepsNotRunError } from './global.js';
+import { FatalError, RetryableError, WorkflowSuspension } from './global.js';
 import { runtimeLogger } from './logger.js';
 import { getStepFunction } from './private.js';
+import type { start } from './runtime/start.js';
+import { getWorld, getWorldHandlers } from './runtime/world.js';
 import {
   type Serializable,
   type StepInvokePayload,
@@ -25,18 +25,30 @@ import {
   hydrateWorkflowReturnValue,
 } from './serialization.js';
 // TODO: move step handler out to a separate file
-import { contextStorage } from './step/get-context.js';
+import { contextStorage } from './step/context-storage.js';
 import * as Attribute from './telemetry/semantic-conventions.js';
 import { serializeTraceCarrier, trace, withTraceContext } from './telemetry.js';
 import { getErrorName, getErrorStack, isInstanceOf } from './types.js';
 import { buildWorkflowSuspensionMessage } from './util.js';
 import { runWorkflow } from './workflow.js';
 
-export { StepsNotRunError } from './global.js';
+export type { Event, WorkflowRun };
+export { WorkflowSuspension } from './global.js';
+export {
+  getWorkflowReadableStream,
+  type WorkflowReadableStreamOptions,
+} from './runtime/readable-stream.js';
 export { type StartOptions, start } from './runtime/start.js';
 export { handleWebhook, processWebhooks } from './runtime/webhook.js';
 
+/**
+ * Retrieves the workflow run metadata and status information for a given run ID.
+ *
+ * @param runId - The workflow run ID obtained from {@link start}.
+ * @throws `Error` - When the workflow run is not found or `deploymentId` is missing.
+ */
 export async function getWorkflowRun(runId: string) {
+  const world = getWorld();
   const deploymentId = await world.getDeploymentId();
   if (!deploymentId) {
     throw new Error('A `deploymentId` must be provided to get a workflow run');
@@ -44,6 +56,15 @@ export async function getWorkflowRun(runId: string) {
   return world.runs.get(runId);
 }
 
+/**
+ * Retrieves the final return value of a completed workflow run.
+ *
+ * @param runId - The workflow run ID obtained from {@link start}.
+ * @param ops - Internal parameter for cleanup operations.
+ * @param global - Internal parameter for type hydration scope.
+ * @throws `WorkflowRunNotCompletedError` - When the workflow is still running or pending.
+ * @throws `WorkflowRunFailedError` - When the workflow has failed.
+ */
 export async function getWorkflowReturnValue(
   runId: string,
   ops: Promise<any>[] = [],
@@ -62,11 +83,6 @@ export async function getWorkflowReturnValue(
   throw new WorkflowRunNotCompletedError(runId, run.status);
 }
 
-export {
-  getWorkflowOutputStream,
-  type WorkflowOutputStreamOptions,
-} from './runtime/ouput-stream.js';
-
 /**
  * Loads all workflow run events by iterating through all pages of paginated results.
  * This ensures that *all* events are loaded into memory before running the workflow.
@@ -76,6 +92,7 @@ async function getAllWorkflowRunEvents(runId: string): Promise<Event[]> {
   let cursor: string | null = null;
   let hasMore = true;
 
+  const world = getWorld();
   while (hasMore) {
     const response = await world.events.list({
       runId,
@@ -99,7 +116,7 @@ async function getAllWorkflowRunEvents(runId: string): Promise<Event[]> {
  * @returns A function that can be used as a Vercel API route.
  */
 export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
-  return world.createQueueHandler(
+  return getWorldHandlers().createQueueHandler(
     '__wkf_workflow_',
     async (message_, metadata) => {
       const { runId, traceCarrier: traceContext } =
@@ -109,6 +126,7 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
 
       // Invoke user workflow within the propagated trace context
       return await withTraceContext(traceContext, async () => {
+        const world = getWorld();
         return trace(`WORKFLOW ${workflowName}`, async (span) => {
           span?.setAttributes({
             ...Attribute.WorkflowName(workflowName),
@@ -172,7 +190,7 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
               ...Attribute.WorkflowEventsCount(events.length),
             });
           } catch (err) {
-            if (isInstanceOf(err, StepsNotRunError)) {
+            if (isInstanceOf(err, WorkflowSuspension)) {
               const suspensionMessage = buildWorkflowSuspensionMessage(
                 runId,
                 err.stepCount,
@@ -205,8 +223,8 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
                       `__wkf_step_${queueItem.stepName}`,
                       {
                         workflowName,
-                        workflowStartedAt,
                         workflowRunId: runId,
+                        workflowStartedAt,
                         stepId: step.stepId,
                         traceCarrier: await serializeTraceCarrier(),
                       } satisfies StepInvokePayload,
@@ -300,20 +318,21 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
  * for each step, this is temporary.
  */
 export const vercelAPIStepsEntrypoint =
-  /* @__PURE__ */ world.createQueueHandler(
+  /* @__PURE__ */ getWorldHandlers().createQueueHandler(
     '__wkf_step_',
     async (message_, metadata) => {
       const {
         workflowName,
         workflowRunId,
-        stepId,
         workflowStartedAt,
+        stepId,
         traceCarrier: traceContext,
       } = StepInvokePayloadSchema.parse(message_);
       // Execute step within the propagated trace context
       return await withTraceContext(traceContext, async () => {
         // Extract the step name from the topic name
         const stepName = metadata.queueName.slice('__wkf_step_'.length);
+        const world = getWorld();
 
         return trace(`STEP ${stepName}`, async (span) => {
           span?.setAttributes({
@@ -391,15 +410,21 @@ export const vercelAPIStepsEntrypoint =
               ...Attribute.StepArgumentsCount(args.length),
             });
 
-            const ctx: WorkflowContext = {
-              workflowRunId,
-              workflowStartedAt: new Date(workflowStartedAt),
-              stepId,
-              stepStartedAt: new Date(+step.startedAt),
-              attempt: metadata.attempt,
-              url: `https://${process.env.VERCEL_URL}`,
-            };
-            result = await contextStorage.run(ctx, () => stepFn(...args));
+            result = await contextStorage.run(
+              {
+                stepContext: {
+                  stepId,
+                  stepStartedAt: new Date(+step.startedAt),
+                  attempt: metadata.attempt,
+                },
+                workflowContext: {
+                  workflowRunId,
+                  workflowStartedAt: new Date(+workflowStartedAt),
+                  url: `https://${process.env.VERCEL_URL}`,
+                },
+              },
+              () => stepFn(...args)
+            );
 
             result = dehydrateStepReturnValue(result, ops);
 
@@ -442,7 +467,7 @@ export const vercelAPIStepsEntrypoint =
             if (isInstanceOf(err, FatalError)) {
               const stackLines = getErrorStack(err).split('\n').slice(0, 4);
               console.error(
-                `[Workflows] "${workflowRunId}" - Encountered \`FatalError\` while executing step:\n  > ${stackLines.join('\n    > ')}\n\nBubbling up error to parent workflow`
+                `[Workflows] "${workflowRunId}" - Encountered \`FatalError\` while executing step "${stepName}":\n  > ${stackLines.join('\n    > ')}\n\nBubbling up error to parent workflow`
               );
               // Fatal error - store the error in the event log and re-invoke the workflow
               await world.events.create(workflowRunId, {
@@ -478,9 +503,9 @@ export const vercelAPIStepsEntrypoint =
                 // Max retries reached
                 const stackLines = getErrorStack(err).split('\n').slice(0, 4);
                 console.error(
-                  `[Workflows] "${workflowRunId}" - Encountered \`Error\` while executing step (attempt ${attempt}):\n  > ${stackLines.join('\n    > ')}\n\n  Max retries reached\n  Bubbling error to parent workflow`
+                  `[Workflows] "${workflowRunId}" - Encountered \`Error\` while executing step "${stepName}" (attempt ${attempt}):\n  > ${stackLines.join('\n    > ')}\n\n  Max retries reached\n  Bubbling error to parent workflow`
                 );
-                const errorMessage = `Max retries reached: ${String(err)}`;
+                const errorMessage = `Step "${stepName}" failed after max retries: ${String(err)}`;
                 await world.events.create(workflowRunId, {
                   eventType: 'step_failed',
                   correlationId: stepId,
@@ -503,12 +528,12 @@ export const vercelAPIStepsEntrypoint =
                 // Not at max retries yet - log as a retryable error
                 if (isInstanceOf(err, RetryableError)) {
                   console.warn(
-                    `[Workflows] "${workflowRunId}" - Encountered \`RetryableError\` while executing step (attempt ${attempt}):\n  > ${String(err.message)}\n\n  Request will return 503 to trigger retry`
+                    `[Workflows] "${workflowRunId}" - Encountered \`RetryableError\` while executing step "${stepName}" (attempt ${attempt}):\n  > ${String(err.message)}\n\n  This step has failed but will be retried`
                   );
                 } else {
                   const stackLines = getErrorStack(err).split('\n').slice(0, 4);
                   console.error(
-                    `[Workflows] "${workflowRunId}" - Encountered \`Error\` while executing step (attempt ${attempt}):\n  > ${stackLines.join('\n    > ')}\n\n  Request will return 503 to trigger retry`
+                    `[Workflows] "${workflowRunId}" - Encountered \`Error\` while executing step "${stepName}" (attempt ${attempt}):\n  > ${stackLines.join('\n    > ')}\n\n  This step has failed but will be retried`
                   );
                 }
                 await world.events.create(workflowRunId, {

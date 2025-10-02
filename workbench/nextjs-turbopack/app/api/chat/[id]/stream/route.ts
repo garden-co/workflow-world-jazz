@@ -1,6 +1,5 @@
-import { getWorkflowOutputStream } from '@vercel/workflow-core/runtime';
-import { createUIMessageStream, type UIMessageChunk } from 'ai';
-import * as ndjson from '@/util/ndjson';
+import { getWorkflowReadableStream } from '@vercel/workflow-core/runtime';
+import { createUIMessageStreamResponse, type UIMessageChunk } from 'ai';
 
 // Uncomment to simulate a long running Vercel Function timing
 // out due to a long running agent. The client-side will
@@ -17,22 +16,7 @@ export async function GET(
   const startIndex =
     startIndexParam !== null ? parseInt(startIndexParam, 10) : undefined;
 
-  const readable = getWorkflowOutputStream<UIMessageChunk>(id, { startIndex });
-
-  const uiMessageStream = createUIMessageStream({
-    execute: async ({ writer }) => {
-      writer.merge(readable);
-    },
+  return createUIMessageStreamResponse({
+    stream: getWorkflowReadableStream<UIMessageChunk>(id, { startIndex }),
   });
-
-  return new Response(
-    uiMessageStream
-      .pipeThrough(ndjson.stringify())
-      .pipeThrough(new TextEncoderStream()),
-    {
-      headers: {
-        'Content-Type': 'application/x-ndjson',
-      },
-    }
-  );
 }

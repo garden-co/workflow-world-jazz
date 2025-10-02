@@ -11,8 +11,10 @@ export function baseOptions(): BaseLayoutProps {
   return {
     nav: {
       title: (
-        <div className="hover:opacity-75 transition-opacity ease-out">
-          <p className="font-semibold text-lg tracking-tight">Workflows</p>
+        <div className="hover:opacity-75 transition-opacity ease-out text-foreground">
+          <span className="text-foreground font-semibold text-lg">
+            Workflows
+          </span>
         </div>
       ),
     },

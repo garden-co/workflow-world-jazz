@@ -1,0 +1,92 @@
+---
+title: "@vercel/workflow-core"
+---
+
+# `@vercel/workflow-core`
+
+Core workflow primitives including steps, context management, streaming, webhooks, and error handling.
+
+## Installation
+
+<BaseUrl>
+  {(baseUrl) => (
+    <Tabs items={['pnpm', 'npm', 'yarn']}>
+      <Tab value="pnpm">
+        <CodeBlock>
+            pnpm i {baseUrl}/vercel-workflow-core.tgz
+        </CodeBlock>
+      </Tab>
+      <Tab value="npm">
+        <CodeBlock>
+            npm i {baseUrl}/vercel-workflow-core.tgz
+        </CodeBlock>
+      </Tab>
+      <Tab value="yarn">
+        <CodeBlock>
+            yarn add {baseUrl}/vercel-workflow-core.tgz
+        </CodeBlock>
+      </Tab>
+    </Tabs>
+  )}
+</BaseUrl>
+
+## Core Functions
+
+Workflow SDK Core contains the following core functions you can use inside your workflow functions:
+
+<Cards>
+    <Card href="/docs/api-reference/vercel-workflow-core/get-workflow-context" title="getWorkflowContext()">
+        A function that returns context about the current workflow execution.
+    </Card>
+    <Card href="/docs/api-reference/vercel-workflow-core/get-step-context" title="getStepContext()">
+        A function that returns context about the current step execution.
+    </Card>
+    <Card href="/docs/api-reference/vercel-workflow-core/sleep" title="sleep()">
+        Sleeping workflows for a specified duration. Deterministic and replay-safe.
+    </Card>
+    <Card href="/docs/api-reference/vercel-workflow-core/fetch" title="fetch()">
+        Make HTTP requests from within a workflow with automatic retry semantics.
+    </Card>
+    <Card href="/docs/api-reference/vercel-workflow-core/get-webhook" title="getWebhook()">
+        Registers a webhook URL that can be used to invoke a workflow.
+    </Card>
+    <Card href="/docs/api-reference/vercel-workflow-core/get-workflow-writable-stream" title="getWorkflowWritableStream()">
+        Access the current workflow run's default stream.
+    </Card>
+</Cards>
+
+---
+
+## Runtime Functions
+
+Workflow SDK Core also provides runtime functions that are used outside of workflow and step functions. These are accessed from the runtime entrypoint (e.g. where `start(workflowFn)` is called):
+
+<Cards>
+    <Card href="/docs/api-reference/vercel-workflow-core/start" title="start()">
+        Start/enqueue a new workflow run.
+    </Card>
+    <Card href="/docs/api-reference/vercel-workflow-core/get-workflow-return-value" title="getWorkflowReturnValue()">
+        Get the final return value of a completed workflow run.
+    </Card>
+    <Card href="/docs/api-reference/vercel-workflow-core/get-workflow-run" title="getWorkflowRun()">
+        Get workflow run status and metadata without waiting for completion.
+    </Card>
+    <Card href="/docs/api-reference/vercel-workflow-core/get-workflow-readable-stream" title="getWorkflowReadableStream()">
+        Access a given workflow run's default stream.
+    </Card>
+</Cards>
+
+---
+
+## Error Classes
+
+Workflow SDK Core includes error classes that can be thrown in a workflow or step to change the error exit strategy of a workflow.
+
+<Cards>
+    <Card href="/docs/api-reference/vercel-workflow-core/fatal-error" title="FatalError()">
+        When thrown, marks a step as failed and the step is not retried.
+    </Card>
+    <Card href="/docs/api-reference/vercel-workflow-core/retryable-error" title="RetryableError()">
+        When thrown, marks a step as retryable with an optional parameter.
+    </Card>
+</Cards>

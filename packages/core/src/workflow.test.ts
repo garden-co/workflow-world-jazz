@@ -1,7 +1,7 @@
 import { types } from 'node:util';
+import type { Event, WorkflowRun } from '@vercel/workflow-world';
 import { assert, describe, expect, it } from 'vitest';
-import type { Event, WorkflowRun } from './world/index.js';
-import type { StepsNotRunError } from './global.js';
+import type { WorkflowSuspension } from './global.js';
 import {
   dehydrateStepReturnValue,
   dehydrateWorkflowArguments,
@@ -10,10 +10,23 @@ import {
 import { runWorkflow } from './workflow.js';
 
 describe('runWorkflow', () => {
+  const getWorkflowTransformCode = (workflowName?: string) =>
+    `;globalThis.__private_workflows = new Map();
+    ${
+      workflowName
+        ? `
+      globalThis.__private_workflows.set(${JSON.stringify(workflowName)}, ${workflowName})
+    `
+        : ''
+    }
+    `;
+
   describe('successful workflow execution', () => {
     it('should execute a simple workflow successfully', async () => {
       const ops: Promise<any>[] = [];
-      const workflowCode = 'function workflow() { return "success"; }';
+      const workflowCode =
+        'function workflow() { return "success"; }' +
+        getWorkflowTransformCode('workflow');
 
       const workflowRun: WorkflowRun = {
         runId: 'wrun_123',
@@ -23,9 +36,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -37,7 +47,9 @@ describe('runWorkflow', () => {
 
     it('should execute workflow with arguments', async () => {
       const ops: Promise<any>[] = [];
-      const workflowCode = 'function workflow(a, b) { return a + b; }';
+      const workflowCode =
+        'function workflow(a, b) { return a + b; }' +
+        getWorkflowTransformCode('workflow');
 
       const workflowRun: WorkflowRun = {
         runId: 'wrun_123',
@@ -47,9 +59,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -61,13 +70,14 @@ describe('runWorkflow', () => {
 
     it('allow user code to handle user-defined errors', async () => {
       const ops: Promise<any>[] = [];
-      const workflowCode = `function workflow() {
+      const workflowCode =
+        `function workflow() {
         try {
           throw new TypeError("my workflow error");
         } catch (err) {
           return err;
         }
-      }`;
+      }` + getWorkflowTransformCode('workflow');
 
       const workflowRun: WorkflowRun = {
         runId: 'wrun_123',
@@ -77,9 +87,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -106,9 +113,6 @@ describe('runWorkflow', () => {
       createdAt: new Date('2024-01-01T00:00:00.000Z'),
       updatedAt: new Date('2024-01-01T00:00:00.000Z'),
       startedAt: new Date('2024-01-01T00:00:00.000Z'),
-      ownerId: 'test-owner',
-      projectId: 'test-project',
-      environment: 'test',
       deploymentId: 'test-deployment',
     };
 
@@ -135,10 +139,10 @@ describe('runWorkflow', () => {
     const result = await runWorkflow(
       `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
           async function workflow() {
-            // 'add()' will throw a 'StepsNotRunError' because it has not been run yet
+            // 'add()' will throw a 'WorkflowSuspension' because it has not been run yet
             const a = await add(1, 2);
             return a;
-          }`,
+          }` + getWorkflowTransformCode('workflow'),
       workflowRun,
       events
     );
@@ -156,9 +160,6 @@ describe('runWorkflow', () => {
       createdAt: new Date('2024-01-01T00:00:00.000Z'),
       updatedAt: new Date('2024-01-01T00:00:00.000Z'),
       startedAt: new Date('2024-01-01T00:00:00.000Z'),
-      ownerId: 'test-owner',
-      projectId: 'test-project',
-      environment: 'test',
       deploymentId: 'test-deployment',
     };
 
@@ -228,7 +229,7 @@ describe('runWorkflow', () => {
             await add(5, 6);
             timestamps.push(new Date());
             return timestamps;
-          }`,
+          }` + getWorkflowTransformCode('workflow'),
       workflowRun,
       events
     );
@@ -254,9 +255,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -287,12 +285,13 @@ describe('runWorkflow', () => {
         },
       ];
 
-      const workflowCode = `
+      const workflowCode =
+        `
       const sleep = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("sleep");
       async function workflow() {
         await Promise.race([sleep(1), sleep(2)]);
         return Date.now();
-      }`;
+      }` + getWorkflowTransformCode('workflow');
 
       // Execute the workflow with only sleep(1) resolved
       const result1 = await runWorkflow(workflowCode, workflowRun, events);
@@ -331,9 +330,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -379,7 +375,7 @@ describe('runWorkflow', () => {
           async function workflow() {
             const a = await Promise.all([add(1, 2), add(3, 4)]);
             return a;
-          }`,
+          }` + getWorkflowTransformCode('workflow'),
         workflowRun,
         events
       );
@@ -397,9 +393,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -445,7 +438,7 @@ describe('runWorkflow', () => {
           async function workflow() {
             const a = await Promise.race([add(1, 2), add(3, 4)]);
             return a;
-          }`,
+          }` + getWorkflowTransformCode('workflow'),
         workflowRun,
         events
       );
@@ -463,9 +456,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -511,7 +501,7 @@ describe('runWorkflow', () => {
           async function workflow() {
             const a = await Promise.race([add(1, 2), add(3, 4)]);
             return a;
-          }`,
+          }` + getWorkflowTransformCode('workflow'),
         workflowRun,
         events
       );
@@ -532,22 +522,23 @@ describe('runWorkflow', () => {
           createdAt: new Date('2024-01-01T00:00:00.000Z'),
           updatedAt: new Date('2024-01-01T00:00:00.000Z'),
           startedAt: new Date('2024-01-01T00:00:00.000Z'),
-          ownerId: 'test-owner',
-          projectId: 'test-project',
-          environment: 'test',
           deploymentId: 'test-deployment',
         };
 
         const events: Event[] = [];
 
-        await runWorkflow('const value = "test"', workflowRun, events);
+        await runWorkflow(
+          'const value = "test"' + getWorkflowTransformCode(),
+          workflowRun,
+          events
+        );
       } catch (err) {
-        error = err;
+        error = err as Error;
       }
       assert(error);
       expect(error.name).toEqual('ReferenceError');
       expect(error.message).toEqual(
-        'Workflow "value" must be a function, but got "string" instead'
+        'Workflow "value" must be a function, but got "undefined" instead'
       );
     });
 
@@ -563,28 +554,26 @@ describe('runWorkflow', () => {
           createdAt: new Date('2024-01-01T00:00:00.000Z'),
           updatedAt: new Date('2024-01-01T00:00:00.000Z'),
           startedAt: new Date('2024-01-01T00:00:00.000Z'),
-          ownerId: 'test-owner',
-          projectId: 'test-project',
-          environment: 'test',
           deploymentId: 'test-deployment',
         };
 
         const events: Event[] = [];
 
         await runWorkflow(
-          'function workflow() { throw new Error("test"); }',
+          'function workflow() { throw new Error("test"); }' +
+            getWorkflowTransformCode('workflow'),
           workflowRun,
           events
         );
       } catch (err) {
-        error = err;
+        error = err as Error;
       }
       assert(error);
       expect(error.name).toEqual('Error');
       expect(error.message).toEqual('test');
     });
 
-    it('should throw `StepsNotRunError` when a step does not have an event result entry', async () => {
+    it('should throw `WorkflowSuspension` when a step does not have an event result entry', async () => {
       let error: Error | undefined;
       try {
         const ops: Promise<any>[] = [];
@@ -596,9 +585,6 @@ describe('runWorkflow', () => {
           createdAt: new Date('2024-01-01T00:00:00.000Z'),
           updatedAt: new Date('2024-01-01T00:00:00.000Z'),
           startedAt: new Date('2024-01-01T00:00:00.000Z'),
-          ownerId: 'test-owner',
-          projectId: 'test-project',
-          environment: 'test',
           deploymentId: 'test-deployment',
         };
 
@@ -607,20 +593,20 @@ describe('runWorkflow', () => {
         await runWorkflow(
           `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
           async function workflow() {
-            // 'add()' will throw a 'StepsNotRunError' because it has not been run yet
+            // 'add()' will throw a 'WorkflowSuspension' because it has not been run yet
             const a = await add(1, 2);
             return a;
-          }`,
+          }` + getWorkflowTransformCode('workflow'),
           workflowRun,
           events
         );
       } catch (err) {
-        error = err;
+        error = err as Error;
       }
       assert(error);
-      expect(error.name).toEqual('StepsNotRunError');
+      expect(error.name).toEqual('WorkflowSuspension');
       expect(error.message).toEqual('1 steps have not been run yet');
-      expect((error as StepsNotRunError).steps).toEqual([
+      expect((error as WorkflowSuspension).steps).toEqual([
         {
           type: 'step',
           stepName: 'add',
@@ -630,7 +616,7 @@ describe('runWorkflow', () => {
       ]);
     });
 
-    it('should throw `StepsNotRunError` when a step has only a "step_started" event', async () => {
+    it('should throw `WorkflowSuspension` when a step has only a "step_started" event', async () => {
       let error: Error | undefined;
       try {
         const ops: Promise<any>[] = [];
@@ -642,9 +628,6 @@ describe('runWorkflow', () => {
           createdAt: new Date('2024-01-01T00:00:00.000Z'),
           updatedAt: new Date('2024-01-01T00:00:00.000Z'),
           startedAt: new Date('2024-01-01T00:00:00.000Z'),
-          ownerId: 'test-owner',
-          projectId: 'test-project',
-          environment: 'test',
           deploymentId: 'test-deployment',
         };
 
@@ -661,23 +644,23 @@ describe('runWorkflow', () => {
         await runWorkflow(
           `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
           async function workflow() {
-            // 'add()' will throw a 'StepsNotRunError' because it has not been run yet
+            // 'add()' will throw a 'WorkflowSuspension' because it has not been run yet
             const a = await add(1, 2);
             return a;
-          }`,
+          }` + getWorkflowTransformCode('workflow'),
           workflowRun,
           events
         );
       } catch (err) {
-        error = err;
+        error = err as Error;
       }
       assert(error);
-      expect(error.name).toEqual('StepsNotRunError');
+      expect(error.name).toEqual('WorkflowSuspension');
       expect(error.message).toEqual('0 steps have not been run yet');
-      expect((error as StepsNotRunError).steps).toEqual([]);
+      expect((error as WorkflowSuspension).steps).toEqual([]);
     });
 
-    it('should throw `StepsNotRunError` for multiple steps with `Promise.all()`', async () => {
+    it('should throw `WorkflowSuspension` for multiple steps with `Promise.all()`', async () => {
       let error: Error | undefined;
       try {
         const ops: Promise<any>[] = [];
@@ -689,9 +672,6 @@ describe('runWorkflow', () => {
           createdAt: new Date('2024-01-01T00:00:00.000Z'),
           updatedAt: new Date('2024-01-01T00:00:00.000Z'),
           startedAt: new Date('2024-01-01T00:00:00.000Z'),
-          ownerId: 'test-owner',
-          projectId: 'test-project',
-          environment: 'test',
           deploymentId: 'test-deployment',
         };
 
@@ -702,17 +682,17 @@ describe('runWorkflow', () => {
           async function workflow() {
             const a = await Promise.all([add(1, 2), add(3, 4)]);
             return a;
-          }`,
+          }` + getWorkflowTransformCode('workflow'),
           workflowRun,
           events
         );
       } catch (err) {
-        error = err;
+        error = err as Error;
       }
       assert(error);
-      expect(error.name).toEqual('StepsNotRunError');
+      expect(error.name).toEqual('WorkflowSuspension');
       expect(error.message).toEqual('2 steps have not been run yet');
-      expect((error as StepsNotRunError).steps).toEqual([
+      expect((error as WorkflowSuspension).steps).toEqual([
         {
           type: 'step',
           stepName: 'add',
@@ -728,7 +708,7 @@ describe('runWorkflow', () => {
       ]);
     });
 
-    it('`StepsNotRunError` should not be catchable by user code', async () => {
+    it('`WorkflowSuspension` should not be catchable by user code', async () => {
       let error: Error | undefined;
       try {
         const ops: Promise<any>[] = [];
@@ -740,9 +720,6 @@ describe('runWorkflow', () => {
           createdAt: new Date('2024-01-01T00:00:00.000Z'),
           updatedAt: new Date('2024-01-01T00:00:00.000Z'),
           startedAt: new Date('2024-01-01T00:00:00.000Z'),
-          ownerId: 'test-owner',
-          projectId: 'test-project',
-          environment: 'test',
           deploymentId: 'test-deployment',
         };
 
@@ -752,27 +729,27 @@ describe('runWorkflow', () => {
           `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
           async function workflow() {
             try {
-              // 'add()' will throw a 'StepsNotRunError' because it has not been run yet
+              // 'add()' will throw a 'WorkflowSuspension' because it has not been run yet
               const a = await add(1, 2);
               return a;
             } catch (err) {
               return err;
             }
-          }`,
+          }` + getWorkflowTransformCode('workflow'),
           workflowRun,
           events
         );
       } catch (err) {
-        error = err;
+        error = err as Error;
       }
       assert(error);
-      expect(error.name).toEqual('StepsNotRunError');
+      expect(error.name).toEqual('WorkflowSuspension');
       expect(error.message).toEqual('1 steps have not been run yet');
     });
   });
 
   describe('webhook', () => {
-    it('should throw `StepsNotRunError` when a webhook is awaiting without a "webhook_request" event', async () => {
+    it('should throw `WorkflowSuspension` when a webhook is awaiting without a "webhook_request" event', async () => {
       let error: Error | undefined;
       try {
         const ops: Promise<any>[] = [];
@@ -784,9 +761,6 @@ describe('runWorkflow', () => {
           createdAt: new Date('2024-01-01T00:00:00.000Z'),
           updatedAt: new Date('2024-01-01T00:00:00.000Z'),
           startedAt: new Date('2024-01-01T00:00:00.000Z'),
-          ownerId: 'test-owner',
-          projectId: 'test-project',
-          environment: 'test',
           deploymentId: 'test-deployment',
         };
 
@@ -798,18 +772,18 @@ describe('runWorkflow', () => {
             const webhook = getWebhook();
             const req = await webhook;
             return req.url;
-          }`,
+          }` + getWorkflowTransformCode('workflow'),
           workflowRun,
           events
         );
       } catch (err) {
-        error = err;
+        error = err as Error;
       }
       assert(error);
-      expect(error.name).toEqual('StepsNotRunError');
+      expect(error.name).toEqual('WorkflowSuspension');
       expect(error.message).toEqual('1 webhooks have not been created yet');
-      expect((error as StepsNotRunError).steps).toHaveLength(1);
-      expect((error as StepsNotRunError).steps[0].type).toEqual('webhook');
+      expect((error as WorkflowSuspension).steps).toHaveLength(1);
+      expect((error as WorkflowSuspension).steps[0].type).toEqual('webhook');
     });
 
     it('should resolve `getWebhook` await upon "webhook_request" event', async () => {
@@ -822,9 +796,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -850,7 +821,7 @@ describe('runWorkflow', () => {
         const webhook = getWebhook();
         const req = await webhook;
         return req.url;
-      }`,
+      }` + getWorkflowTransformCode('workflow'),
         workflowRun,
         events
       );
@@ -869,9 +840,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -911,7 +879,7 @@ describe('runWorkflow', () => {
         const req1 = await webhook;
         const req2 = await webhook;
         return [req1.url, req2.url];
-      }`,
+      }` + getWorkflowTransformCode('workflow'),
         workflowRun,
         events
       );
@@ -931,9 +899,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -980,7 +945,7 @@ describe('runWorkflow', () => {
           }
         }
         return reqs;
-      }`,
+      }` + getWorkflowTransformCode('workflow'),
         workflowRun,
         events
       );
@@ -1000,9 +965,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -1043,7 +1005,7 @@ describe('runWorkflow', () => {
         const webhook = getWebhook();
         const req = await webhook;
         return { url: req.url, method: req.method };
-      }`,
+      }` + getWorkflowTransformCode('workflow'),
         workflowRun,
         events
       );
@@ -1063,9 +1025,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -1132,7 +1091,7 @@ describe('runWorkflow', () => {
           url2: req2.url,
           method2: req2.method,
         };
-      }`,
+      }` + getWorkflowTransformCode('workflow'),
         workflowRun,
         events
       );
@@ -1145,7 +1104,7 @@ describe('runWorkflow', () => {
       });
     });
 
-    it('should throw `StepsNotRunError` when a webhook is awaited after the event log is empty', async () => {
+    it('should throw `WorkflowSuspension` when a webhook is awaited after the event log is empty', async () => {
       const ops: Promise<any>[] = [];
       const workflowRun: WorkflowRun = {
         runId: 'test-run-123',
@@ -1155,9 +1114,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -1204,18 +1160,18 @@ describe('runWorkflow', () => {
         for await (const req of webhook) {
           await add(1, 2);
         }
-      }`,
+      }` + getWorkflowTransformCode('workflow'),
           workflowRun,
           events
         );
       } catch (err) {
-        error = err;
+        error = err as Error;
       }
       assert(error);
-      expect(error.name).toEqual('StepsNotRunError');
+      expect(error.name).toEqual('WorkflowSuspension');
       expect(error.message).toEqual('1 webhooks have not been created yet');
-      expect((error as StepsNotRunError).steps).toHaveLength(1);
-      expect((error as StepsNotRunError).steps[0].type).toEqual('webhook');
+      expect((error as WorkflowSuspension).steps).toHaveLength(1);
+      expect((error as WorkflowSuspension).steps[0].type).toEqual('webhook');
     });
   });
 });

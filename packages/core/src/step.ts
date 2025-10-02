@@ -1,6 +1,6 @@
 import { WorkflowRuntimeError } from './errors.js';
 import { EventConsumerResult } from './events-consumer.js';
-import { FatalError, StepsNotRunError } from './global.js';
+import { FatalError, WorkflowSuspension } from './global.js';
 import { stepLogger } from './logger.js';
 import type { WorkflowOrchestratorContext } from './private.js';
 import type { Serializable } from './schemas.js';
@@ -35,7 +35,7 @@ export function createUseStep(ctx: WorkflowOrchestratorContext) {
           // Notify the workflow handler that this step has not been run / has not completed yet.
           setTimeout(() => {
             ctx.onWorkflowError(
-              new StepsNotRunError(ctx.invocationsQueue, ctx.globalThis)
+              new WorkflowSuspension(ctx.invocationsQueue, ctx.globalThis)
             );
           }, 0);
           return EventConsumerResult.NotConsumed;

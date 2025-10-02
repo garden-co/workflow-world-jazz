@@ -16,6 +16,9 @@ This repository contains the client side SDK code for workflows, along example a
 - **packages/next**: Next.js integration (`@vercel/workflow-next`)
 - **packages/cli**: Command-line interface (`@vercel/workflow-cli`)
 - **packages/vm**: Sandboxed execution environment (`@vercel/workflow-vm`)
+- **packages/world**: Core interfaces and types for workflow storage backends (`@vercel/workflow-world`)
+- **packages/world-embedded**: Filesystem-based workflow backend for local development and testing (`@vercel/workflow-world-embedded`)
+- **packages/world-vercel**: Production workflow backend for Vercel platform deployments (`@vercel/workflow-world-vercel`)
 - **packages/swc-plugin-workflow**: SWC compiler plugin for workflow transformations
 - **workbench/example**: Basic workflow examples using the CLI (aka "standalone mode")
 - **workbench/nextjs-turbopack**: Workflow examples using the Next.js integration
@@ -119,6 +122,12 @@ This project uses pnpm with workspace configuration. The required version is spe
 - 2-space indentation, single quotes, trailing commas (ES5)
 - Import type enforcement enabled
 - No explicit any allowed, exhaustive dependencies warnings enabled
+
+## Documentation Standards
+
+- README.md files in each package must accurately reflect the current functionality and purpose of that package
+- READMEs should not contain outdated or incorrect information about package capabilities
+- When modifying package functionality, ensure corresponding README updates are included
 
 ## Changesets
 
