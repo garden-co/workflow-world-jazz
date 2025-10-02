@@ -36,6 +36,7 @@
     "ajv": "^8.17.1",
     "debug": "^4.4.3",
     "devalue": "^5.1.1",
+    "jazz-tools": "^0.18.16",
     "jsonwebtoken": "^9.0.2",
     "ms": "2.1.3",
     "pid-port": "^1.0.2",
