@@ -48,11 +48,6 @@ export const createQueue = (
         })
       ).root.queues;
 
-      // biome-ignore lint/style/noNonNullAssertion: verified above
-      const registry = await JazzWebhook.load(
-        process.env.JAZZ_WEBHOOK_REGISTRY_ID!
-      );
-
       let pathname: string;
       if (queueName.startsWith('__wkf_step_')) {
         pathname = `step`;
@@ -70,10 +65,14 @@ export const createQueue = (
               [queueName]: true,
             },
           })
-          .catch(() => {
-            const queue = JazzQueue.create({ name: queueName, messages: {} });
+          .catch(async () => {
+            const queue = JazzQueue.create({ name: queueName, messages: [] });
             queues.$jazz.set(queueName, queue);
 
+            // biome-ignore lint/style/noNonNullAssertion: verified above
+            const registry = await JazzWebhook.load(
+              process.env.JAZZ_WEBHOOK_REGISTRY_ID!
+            );
             registry.register(
               `http://localhost:${port}/.well-known/workflow/v1/${pathname}`,
               queue.messages.$jazz.id
@@ -97,7 +96,7 @@ export const createQueue = (
         idempotencyKey: opts?.idempotencyKey,
         queueName: queueName,
       });
-      messages.$jazz.set(msg.$jazz.id, msg);
+      messages.$jazz.push(msg);
 
       return { messageId: MessageId.parse(msg.$jazz.id) };
     },
@@ -139,15 +138,9 @@ export const createQueue = (
         }
 
         // Temporary: find an unprocessed message
-        let message: JazzQueueMessage | undefined;
-        for (const msg of Object.values(messages)) {
-          if (msg.processedAt || processedMessages.has(msg.$jazz.id)) {
-            continue;
-          }
-          message = msg;
-          processedMessages.add(msg.$jazz.id);
-          break;
-        }
+        const message = messages.find(
+          (msg) => !msg.processedAt && !processedMessages.has(msg.$jazz.id)
+        );
         if (!message) {
           return Response.json(
             { error: 'No messages to process' },
@@ -171,6 +164,7 @@ export const createQueue = (
             return Response.json({ retryIn }, { status: 503 });
           }
 
+          processedMessages.add(message.$jazz.id);
           message.$jazz.set('processedAt', new Date());
           return Response.json({ ok: true });
         } catch (error) {

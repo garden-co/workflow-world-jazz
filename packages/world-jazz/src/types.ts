@@ -72,7 +72,7 @@ export const JazzQueueMessage = co.map({
 
 export type JazzQueueMessage = co.loaded<typeof JazzQueueMessage>;
 
-export const JazzQueueMessages = co.record(z.string(), JazzQueueMessage);
+export const JazzQueueMessages = co.list(JazzQueueMessage);
 
 export type JazzQueueMessages = co.loaded<typeof JazzQueueMessages>;
 
