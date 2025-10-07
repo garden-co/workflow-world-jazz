@@ -13,7 +13,7 @@ export function withWorkflow({
   };
 }) {
   if (!process.env.VERCEL_DEPLOYMENT_ID) {
-    process.env.WORKFLOW_TARGET_WORLD = 'embedded';
+    //process.env.WORKFLOW_TARGET_WORLD = 'embedded';
     process.env.WORKFLOW_EMBEDDED_DATA_DIR = '.next/workflow-data';
     const maybePort = workflows?.embedded?.port;
     if (maybePort) {

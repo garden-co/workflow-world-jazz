@@ -33,6 +33,7 @@
     "@vercel/workflow-vm": "workspace:*",
     "@vercel/workflow-world": "workspace:*",
     "@vercel/workflow-world-embedded": "workspace:*",
+    "@vercel/workflow-world-jazz": "workspace:*",
     "@vercel/workflow-world-vercel": "workspace:*",
     "ajv": "^8.17.1",
     "debug": "^4.4.3",

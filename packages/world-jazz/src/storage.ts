@@ -221,7 +221,7 @@ export const createStorage = (
             },
           },
         }).catch((error) => {
-          throw new Error(`Steps for run ${runId} not found`, {
+          throw new Error(`Steps for run ${runId} not found (get)`, {
             cause: error,
           });
         })
@@ -250,7 +250,7 @@ export const createStorage = (
             },
           },
         }).catch((error) => {
-          throw new Error(`Steps for run ${runId} not found`, {
+          throw new Error(`Steps for run ${runId} not found (update)`, {
             cause: error,
           });
         })

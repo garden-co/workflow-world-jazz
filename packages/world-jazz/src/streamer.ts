@@ -64,18 +64,29 @@ export const createStreamer = (
     name: string,
     startIndex = 0
   ): Promise<ReadableStream<Uint8Array>> {
-    // biome-ignore lint/style/noNonNullAssertion: ensureLoaded throws if the stream is not found
-    const stream = (
+    const streams = (
       await ensureLoaded({
         root: {
-          streams: {
+          streams: true,
+        },
+      })
+    ).root.streams;
+
+    // biome-ignore lint/style/noNonNullAssertion: ensureLoaded throws if the stream is not found
+    const stream = (
+      await streams.$jazz
+        .ensureLoaded({
+          resolve: {
             [name]: true,
           },
-        },
-      }).catch((error) => {
-        throw new Error(`Stream ${name} not found`, { cause: error });
-      })
-    ).root.streams[name]!;
+        })
+        .catch(() => {
+          const fs = co.fileStream().create();
+          fs.start({ mimeType: 'application/octet-stream' });
+          streams.$jazz.set(name, fs);
+          return { [name]: fs };
+        })
+    )[name]!;
 
     let unsubscribe: () => void;
 

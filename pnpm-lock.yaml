@@ -457,6 +457,9 @@ importers:
       '@vercel/workflow-world-embedded':
         specifier: workspace:*
         version: link:../world-embedded
+      '@vercel/workflow-world-jazz':
+        specifier: workspace:*
+        version: link:../world-jazz
       '@vercel/workflow-world-vercel':
         specifier: workspace:*
         version: link:../world-vercel
@@ -610,6 +613,9 @@ importers:
       jazz-tools:
         specifier: ^0.18.20
         version: 0.18.20(@tiptap/pm@2.26.2)(csstype@3.1.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      jazz-webhook:
+        specifier: file:../../../../jazz/packages/jazz-webhook/dist
+        version: dist@file:../../jazz/packages/jazz-webhook/dist
       zod:
         specifier: 'catalog:'
         version: 4.1.11
@@ -3890,6 +3896,9 @@ packages:
   dir-glob@3.0.1:
     resolution: {integrity: sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==}
     engines: {node: '>=8'}
+
+  dist@file:../../jazz/packages/jazz-webhook/dist:
+    resolution: {directory: ../../jazz/packages/jazz-webhook/dist, type: directory}
 
   drizzle-kit@0.22.8:
     resolution: {integrity: sha512-VjI4wsJjk3hSqHSa3TwBf+uvH6M6pRHyxyoVbt935GUzP9tUR/BRZ+MhEJNgryqbzN2Za1KP0eJMTgKEPsalYQ==}
@@ -9488,6 +9497,8 @@ snapshots:
   dir-glob@3.0.1:
     dependencies:
       path-type: 4.0.0
+
+  dist@file:../../jazz/packages/jazz-webhook/dist: {}
 
   drizzle-kit@0.22.8:
     dependencies:

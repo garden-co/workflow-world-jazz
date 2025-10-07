@@ -1,5 +1,6 @@
 import type { World } from '@vercel/workflow-world';
 import { createEmbeddedWorld } from '@vercel/workflow-world-embedded';
+import { createJazzWorld } from '@vercel/workflow-world-jazz';
 import {
   type APIConfig,
   createVercelWorld,
@@ -36,6 +37,12 @@ const initWorld = () => {
     return createVercelWorld(config);
   }
 
+  const port = process.env.PORT ? Number(process.env.PORT) : undefined;
+
+  if (targetWorld === 'jazz') {
+    return createJazzWorld(port);
+  }
+
   if (targetWorld !== 'embedded') {
     console.error(
       `Invalid target world: ${targetWorld}, using embedded world instead.`
@@ -43,7 +50,6 @@ const initWorld = () => {
   }
 
   const dataDir = process.env.WORKFLOW_EMBEDDED_DATA_DIR;
-  const port = process.env.PORT ? Number(process.env.PORT) : undefined;
   return createEmbeddedWorld(dataDir, port);
 };
 

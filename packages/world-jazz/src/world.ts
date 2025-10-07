@@ -1,5 +1,7 @@
-import type { AuthProvider, Storage, Streamer } from '@vercel/workflow-world';
+import type { AuthProvider, World } from '@vercel/workflow-world';
 import { startWorker } from 'jazz-tools/worker';
+import { config } from './config.js';
+import { createQueue } from './queue.js';
 import { createStorage } from './storage.js';
 import { createStreamer } from './streamer.js';
 import {
@@ -7,12 +9,13 @@ import {
   type JazzStorageAccountResolver,
 } from './types.js';
 
-// interface JazzWorld extends World {
-interface JazzWorld extends Storage, Streamer {
-  done(): Promise<void>;
-}
+let world: World | undefined;
 
-export function createJazzWorld(): JazzWorld {
+export function createJazzWorld(port?: number): World {
+  if (world) {
+    return world;
+  }
+
   const workerPromise = (async () => {
     const { worker } = await startWorker({
       syncServer: `wss://cloud.jazz.tools/?key=${process.env.JAZZ_API_KEY}`,
@@ -26,15 +29,13 @@ export function createJazzWorld(): JazzWorld {
     return worker.$jazz.ensureLoaded({ resolve });
   };
 
-  return {
+  world = {
     ...authImpl,
+    ...createQueue(ensureLoaded, port ?? config.port),
     ...createStorage(ensureLoaded),
     ...createStreamer(ensureLoaded),
-    done: async () => {
-      const worker = await workerPromise;
-      await worker.$jazz.waitForAllCoValuesSync();
-    },
   };
+  return world;
 }
 
 const authImpl: AuthProvider = {

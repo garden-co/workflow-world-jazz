@@ -33,7 +33,7 @@
   "dependencies": {
     "@vercel/workflow-world": "workspace:*",
     "jazz-tools": "^0.18.20",
+    "jazz-webhook": "file:../../../../jazz/packages/jazz-webhook/dist",
     "zod": "catalog:"
-  },
-  "peerDependenciesMeta": {}
+  }
 }
