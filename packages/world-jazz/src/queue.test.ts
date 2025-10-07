@@ -14,17 +14,26 @@ function createQueueName(name: string): ValidQueueName {
 }
 
 describe('Jazz Queue', () => {
+  // Mock the registerWebhook function from jazz-webhook
+  vi.mock('jazz-webhook', () => ({
+    registerWebhook: vi.fn().mockResolvedValue('mock-webhook-id'),
+  }));
+
+  // Set up environment variable for tests
+  process.env.JAZZ_WEBHOOK_REGISTRY_ID = 'test-registry-id';
+
   let queue: Queue;
   let ensureLoaded: JazzStorageAccountResolver;
 
   beforeEach(() => {
     ensureLoaded = createJazzTestAccountResolver();
-    queue = createQueue(ensureLoaded);
+    queue = createQueue(ensureLoaded, 9999);
   });
 
   describe('getDeploymentId', () => {
-    it('should throw not implemented error', async () => {
-      await expect(queue.getDeploymentId()).rejects.toThrow('Not implemented');
+    it('should return jazz deployment ID', async () => {
+      const deploymentId = await queue.getDeploymentId();
+      expect(deploymentId).toBe('dpl_jazz');
     });
   });
 
@@ -203,12 +212,13 @@ describe('Jazz Queue', () => {
         await ensureLoaded({
           root: {
             queues: {
-              [queueName]: true,
+              [queueName]: {
+                messages: true,
+              },
             },
           },
         })
       ).root.queues[queueName]!;
-      const queueCovalueId = jazzQueue.$jazz.id;
 
       // Create a queue handler and invoke it with the webhook payload
       const queueNamePrefix = '__wkf_step_' as QueuePrefix;
@@ -217,7 +227,10 @@ describe('Jazz Queue', () => {
       const request = new Request('http://localhost/webhook', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ coValueId: queueCovalueId, updates: 1 }),
+        body: JSON.stringify({
+          coValueId: jazzQueue.messages?.$jazz.id,
+          updates: 1,
+        }),
       });
       const response = await queueHandler(request);
 
