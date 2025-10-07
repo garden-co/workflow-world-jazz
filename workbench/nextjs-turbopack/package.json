@@ -29,6 +29,7 @@
     "@types/react-dom": "^19",
     "@vercel/workflow-core": "workspace:*",
     "@vercel/workflow-next": "workspace:*",
+    "jazz-run": "https://pkg.pr.new/garden-co/jazz/jazz-run@98ef5d75cc3085a70fbf47060937a4c67f116677",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

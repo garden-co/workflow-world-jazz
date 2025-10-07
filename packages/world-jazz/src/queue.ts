@@ -4,7 +4,7 @@ import {
   type QueuePrefix,
   type ValidQueueName,
 } from '@vercel/workflow-world';
-import { JazzWebhook } from 'jazz-webhook/webhook.js';
+import { registerWebhook } from 'jazz-webhook';
 import { z } from 'zod';
 import {
   JazzQueue,
@@ -69,11 +69,9 @@ export const createQueue = (
             const queue = JazzQueue.create({ name: queueName, messages: [] });
             queues.$jazz.set(queueName, queue);
 
-            // biome-ignore lint/style/noNonNullAssertion: verified above
-            const registry = await JazzWebhook.load(
-              process.env.JAZZ_WEBHOOK_REGISTRY_ID!
-            );
-            registry.register(
+            await registerWebhook(
+              // biome-ignore lint/style/noNonNullAssertion: verified above
+              process.env.JAZZ_WEBHOOK_REGISTRY_ID!,
               `http://localhost:${port}/.well-known/workflow/v1/${pathname}`,
               queue.messages.$jazz.id
             );

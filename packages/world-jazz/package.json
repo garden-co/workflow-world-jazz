@@ -32,8 +32,8 @@
   },
   "dependencies": {
     "@vercel/workflow-world": "workspace:*",
-    "jazz-tools": "^0.18.20",
-    "jazz-webhook": "file:../../../../jazz/packages/jazz-webhook/dist",
+    "jazz-tools": "https://pkg.pr.new/garden-co/jazz/jazz-tools@98ef5d75cc3085a70fbf47060937a4c67f116677",
+    "jazz-webhook": "https://pkg.pr.new/garden-co/jazz/jazz-webhook@98ef5d75cc3085a70fbf47060937a4c67f116677",
     "zod": "catalog:"
   }
 }
