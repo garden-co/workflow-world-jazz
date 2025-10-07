@@ -1,5 +1,75 @@
 # @vercel/workflow-next
 
+## 0.0.1-alpha.36
+
+### Patch Changes
+
+- Updated dependencies [544055f]
+  - @vercel/workflow-core@0.0.1-alpha.26
+  - @vercel/workflow-cli@0.0.1-alpha.35
+
+## 0.0.1-alpha.35
+
+### Patch Changes
+
+- e275561: Refactor world selection logic in core, and unify with CLI use. Polish pagination. Refactor logging.
+- Updated dependencies [e275561]
+  - @vercel/workflow-core@0.0.1-alpha.25
+  - @vercel/workflow-cli@0.0.1-alpha.34
+
+## 0.0.1-alpha.34
+
+### Patch Changes
+
+- Updated dependencies [a946b38]
+- Updated dependencies [72fb2c1]
+- Updated dependencies [3ee71fa]
+- Updated dependencies [a61eaad]
+- Updated dependencies [07b3283]
+- Updated dependencies [5fc83a5]
+- Updated dependencies [7c0f71e]
+- Updated dependencies [1688890]
+- Updated dependencies [d66070f]
+- Updated dependencies [d808404]
+- Updated dependencies [eb76cb3]
+- Updated dependencies [d338144]
+- Updated dependencies [345836a]
+- Updated dependencies [f2168a6]
+- Updated dependencies [cd4a41c]
+  - @vercel/workflow-core@0.0.1-alpha.24
+  - @vercel/workflow-cli@0.0.1-alpha.33
+  - @vercel/swc-plugin-workflow@0.0.1-alpha.5
+
+## 0.0.1-alpha.33
+
+### Patch Changes
+
+- Updated dependencies [37e6ee8]
+- Updated dependencies [d412985]
+- Updated dependencies [f56e1e6]
+- Updated dependencies [a85227c]
+  - @vercel/workflow-core@0.0.1-alpha.23
+  - @vercel/workflow-cli@0.0.1-alpha.32
+
+## 0.0.1-alpha.32
+
+### Patch Changes
+
+- Updated dependencies [a5197f7]
+  - @vercel/workflow-core@0.0.1-alpha.22
+  - @vercel/workflow-cli@0.0.1-alpha.31
+
+## 0.0.1-alpha.31
+
+### Patch Changes
+
+- Updated dependencies [d4914d7]
+- Updated dependencies [8ed4fb6]
+- Updated dependencies [705e63c]
+- Updated dependencies [757e454]
+  - @vercel/workflow-core@0.0.1-alpha.21
+  - @vercel/workflow-cli@0.0.1-alpha.30
+
 ## 0.0.1-alpha.30
 
 ### Patch Changes

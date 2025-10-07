@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { Event } from './world/index.js';
+import type { Event } from '@vercel/workflow-world';
 import { EventConsumerResult, EventsConsumer } from './events-consumer.js';
 
 // Helper function to create mock events

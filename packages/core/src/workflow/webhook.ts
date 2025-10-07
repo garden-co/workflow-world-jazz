@@ -1,9 +1,9 @@
+import type { WebhookRequestEvent } from '@vercel/workflow-world';
 import type { JSONSchema7 } from 'json-schema';
 import z from 'zod';
-import type { WebhookRequestEvent } from '../world/events.js';
 import { EventConsumerResult } from '../events-consumer.js';
 import type { Webhook, WebhookOptions, WebhookSchema } from '../get-webhook.js';
-import { StepsNotRunError } from '../global.js';
+import { WorkflowSuspension } from '../global.js';
 import { webhookLogger } from '../logger.js';
 import type { WorkflowOrchestratorContext } from '../private.js';
 import { hydrateStepReturnValue } from '../serialization.js';
@@ -99,7 +99,7 @@ export function createGetWebhook(ctx: WorkflowOrchestratorContext) {
         if (promises.length > 0) {
           setTimeout(() => {
             ctx.onWorkflowError(
-              new StepsNotRunError(ctx.invocationsQueue, ctx.globalThis)
+              new WorkflowSuspension(ctx.invocationsQueue, ctx.globalThis)
             );
           }, 0);
           return EventConsumerResult.Finished;
@@ -173,7 +173,7 @@ export function createGetWebhook(ctx: WorkflowOrchestratorContext) {
         // Treat this case as a "step not run" scenario and suspend the workflow.
         setTimeout(() => {
           ctx.onWorkflowError(
-            new StepsNotRunError(ctx.invocationsQueue, ctx.globalThis)
+            new WorkflowSuspension(ctx.invocationsQueue, ctx.globalThis)
           );
         }, 0);
       }

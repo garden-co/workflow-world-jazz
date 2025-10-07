@@ -1,5 +1,6 @@
 // Error: sync function with use step
 import { start as __private_workflow_start, runStep as __private_run_step } from "@vercel/workflow-core/runtime";
+/**__internal_workflows{"workflows":{"input.js":{"validWorkflow":{"workflowId":"workflow-input-js-validWorkflow"}}},"steps":{"input.js":{"validStep":{"stepId":"step-input-js-validStep"}}}}*/;
 export function syncStep() {
     'use step';
     return 42;
@@ -22,4 +23,7 @@ export async function validStep() {
         arguments: []
     });
 }
-export const validWorkflow = async ()=>__private_workflow_start("validWorkflow", []);
+export const validWorkflow = async ()=>{
+    throw new Error("You attempted to execute workflow validWorkflow function directly. To start a workflow, use start(validWorkflow) from @vercel/workflow");
+};
+validWorkflow.workflowId = "workflow-input-js-validWorkflow";

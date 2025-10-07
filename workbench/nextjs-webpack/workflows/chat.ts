@@ -15,12 +15,12 @@ const MAX_STEPS = 10;
 export async function streamTextStep(
   step: number,
   messages: ModelMessage[],
-  writeable: WritableStream<UIMessageChunk>
+  writablele: WritableStream<UIMessageChunk>
 ) {
   'use step';
 
   // Send start data message
-  const writer = writeable.getWriter();
+  const writer = writablele.getWriter();
   writer.write({
     type: 'data-workflow',
     data: {
@@ -103,9 +103,9 @@ export async function streamTextStep(
   };
 }
 
-export async function endStream(writeable: WritableStream<UIMessageChunk>) {
+export async function endStream(writablele: WritableStream<UIMessageChunk>) {
   'use step';
-  const writer = writeable.getWriter();
+  const writer = writablele.getWriter();
 
   console.log('Closing workflow stream');
 
@@ -129,7 +129,7 @@ export async function endStream(writeable: WritableStream<UIMessageChunk>) {
  */
 export async function chat(
   messages: UIMessage[],
-  writeable: WritableStream<UIMessageChunk>
+  writable: WritableStream<UIMessageChunk>
 ) {
   'use workflow';
 
@@ -142,7 +142,7 @@ export async function chat(
   for (let i = 0; i < MAX_STEPS; i++) {
     console.log(`Running step ${i + 1}`);
 
-    const result = await streamTextStep(i, currMessages, writeable);
+    const result = await streamTextStep(i, currMessages, writable);
 
     currMessages.push(...result.messages);
     finishReason = result.finishReason;
@@ -153,7 +153,7 @@ export async function chat(
   }
 
   // Send an end message to the client
-  await endStream(writeable);
+  await endStream(writable);
 
   console.log('Finished workflow');
 

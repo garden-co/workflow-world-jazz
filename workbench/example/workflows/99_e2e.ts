@@ -1,14 +1,16 @@
 import {
-  createWorkflowOutputStream,
   FatalError,
-  getContext,
+  fetch,
+  getStepContext,
   getWebhook,
+  getWorkflowContext,
+  getWorkflowWritableStream,
   sleep,
 } from '@vercel/workflow-core';
 
 //////////////////////////////////////////////////////////
 
-async function add(a: number, b: number) {
+export async function add(a: number, b: number) {
   'use step';
   return a + b;
 }
@@ -137,6 +139,14 @@ export async function sleepingWorkflow() {
   return { startTime, endTime };
 }
 
+export async function sleepingDateWorkflow(endDate: Date) {
+  'use workflow';
+  const startTime = Date.now();
+  await sleep(endDate);
+  const endTime = Date.now();
+  return { startTime, endTime };
+}
+
 //////////////////////////////////////////////////////////
 
 async function nullByteStep() {
@@ -154,14 +164,15 @@ export async function nullByteWorkflow() {
 
 async function stepWithContext() {
   'use step';
-  const ctx = getContext();
-  return ctx;
+  const stepCtx = getStepContext();
+  const workflowCtx = getWorkflowContext();
+  return { stepCtx, workflowCtx };
 }
 
-export async function getContextWorkflow() {
+export async function workflowAndStepContextWorkflow() {
   'use workflow';
-  const workflowCtx = getContext();
-  const stepCtx = await stepWithContext();
+  const workflowCtx = getWorkflowContext();
+  const { stepCtx, workflowCtx: innerWorkflowCtx } = await stepWithContext();
   return {
     workflowCtx: {
       workflowRunId: workflowCtx.workflowRunId,
@@ -169,6 +180,7 @@ export async function getContextWorkflow() {
       url: workflowCtx.url,
     },
     stepCtx,
+    innerWorkflowCtx,
   };
 }
 
@@ -197,7 +209,7 @@ async function stepCloseOutputStream(writable: WritableStream) {
 
 export async function outputStreamWorkflow() {
   'use workflow';
-  const writable = createWorkflowOutputStream();
+  const writable = getWorkflowWritableStream();
   await sleep('1s');
   await stepWithOutputStreamBinary(writable);
   await sleep('1s');
@@ -205,4 +217,13 @@ export async function outputStreamWorkflow() {
   await sleep('1s');
   await stepCloseOutputStream(writable);
   return 'done';
+}
+
+//////////////////////////////////////////////////////////
+
+export async function fetchWorkflow() {
+  'use workflow';
+  const response = await fetch('https://jsonplaceholder.typicode.com/todos/1');
+  const data = await response.json();
+  return data;
 }

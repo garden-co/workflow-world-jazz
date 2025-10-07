@@ -1,4 +1,5 @@
 import { runStep as __private_run_step } from "@vercel/workflow-core/runtime";
+/**__internal_workflows{"steps":{"input.js":{"destructure":{"stepId":"step-input-js-destructure"},"multiple":{"stepId":"step-input-js-multiple"},"nested_destructure":{"stepId":"step-input-js-nested_destructure"},"process_array":{"stepId":"step-input-js-process_array"},"rest_top_level":{"stepId":"step-input-js-rest_top_level"},"with_defaults":{"stepId":"step-input-js-with_defaults"},"with_rest":{"stepId":"step-input-js-with_rest"}}}}*/;
 export async function destructure({ a, b }) {
     return __private_run_step("destructure", {
         arguments: [

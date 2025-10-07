@@ -1,4 +1,4 @@
-import type { Event } from './world/index.js';
+import type { Event } from '@vercel/workflow-world';
 import { eventsLogger } from './logger.js';
 
 export enum EventConsumerResult {

@@ -3,6 +3,23 @@ import { createRequire } from 'module';
 
 const require = createRequire(import.meta.filename);
 
+export type WorkflowManifest = {
+  steps?: {
+    [relativeFileName: string]: {
+      [functionName: string]: {
+        stepId: string;
+      };
+    };
+  };
+  workflows?: {
+    [relativeFileName: string]: {
+      [functionName: string]: {
+        workflowId: string;
+      };
+    };
+  };
+};
+
 export async function applySwcTransform(
   filename: string,
   source: string,
@@ -12,7 +29,10 @@ export async function applySwcTransform(
     // this must be absolute path
     baseUrl?: string;
   }
-): Promise<string> {
+): Promise<{
+  code: string;
+  workflowManifest: WorkflowManifest;
+}> {
   // Determine if this is a TypeScript file
   const isTypeScript = filename.endsWith('.ts') || filename.endsWith('.tsx');
   const isTsx = filename.endsWith('.tsx');
@@ -43,5 +63,16 @@ export async function applySwcTransform(
     minify: false,
   });
 
-  return result.code;
+  const workflowCommentMatch = result.code.match(
+    /\/\*\*__internal_workflows({.*?})\*\//s
+  );
+
+  const parsedWorkflows = JSON.parse(
+    workflowCommentMatch?.[1] || '{}'
+  ) as WorkflowManifest;
+
+  return {
+    code: result.code,
+    workflowManifest: parsedWorkflows || {},
+  };
 }

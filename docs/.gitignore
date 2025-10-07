@@ -25,9 +25,6 @@ yarn-error.log*
 # others
 .env*.local
 .vercel
-<<<<<<< HEAD
-next-env.d.ts
-=======
 
 # typescript
 *.tsbuildinfo
@@ -39,4 +36,3 @@ _pagefind/
 # tarballs
 *.tgz
 .env*.local
->>>>>>> main

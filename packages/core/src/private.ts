@@ -18,15 +18,15 @@ const registeredSteps = new Map<string, StepFunction>();
 /**
  * Register a step function to be served in the server bundle
  */
-export function registerStepFunction(stepFn: StepFunction) {
-  registeredSteps.set(stepFn.name, stepFn);
+export function registerStepFunction(stepId: string, stepFn: StepFunction) {
+  registeredSteps.set(stepId, stepFn);
 }
 
 /**
  * Find a registered step function by name
  */
-export function getStepFunction(stepName: string): StepFunction | undefined {
-  return registeredSteps.get(stepName);
+export function getStepFunction(stepId: string): StepFunction | undefined {
+  return registeredSteps.get(stepId);
 }
 
 export interface WorkflowOrchestratorContext {

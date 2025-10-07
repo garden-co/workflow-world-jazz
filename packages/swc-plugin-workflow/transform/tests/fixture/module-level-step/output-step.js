@@ -1,4 +1,5 @@
 import { registerStepFunction } from "@vercel/workflow-core/private";
+/**__internal_workflows{"steps":{"input.js":{"step":{"stepId":"step-input-js-step"},"stepArrow":{"stepId":"step-input-js-stepArrow"}}}}*/;
 async function local(input) {
     return input.foo;
 }
@@ -11,5 +12,5 @@ export async function step(input) {
 export const stepArrow = async (input)=>{
     return input.bar;
 };
-registerStepFunction(step);
-registerStepFunction(stepArrow);
+registerStepFunction("step-input-js-step", step);
+registerStepFunction("step-input-js-stepArrow", stepArrow);

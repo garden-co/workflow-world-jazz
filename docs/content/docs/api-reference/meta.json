@@ -2,11 +2,8 @@
   "title": "API Reference",
   "pages": [
     "api-reference",
-    "get-context",
-    "get-webhook",
-    "sleep",
-    "create-workflow-output-stream",
-    "fatal-error",
-    "retryable-error"
+    "vercel-workflow-ai",
+    "vercel-workflow-core",
+    "vercel-workflow-next"
   ]
 }

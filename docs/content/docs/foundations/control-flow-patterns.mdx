@@ -54,7 +54,7 @@ export async function withTimeout(taskId: string) {
   
   const result = await Promise.race([
     performTask(taskId),
-    sleep(30000)
+    sleep("30s")
   ]);
   
   return result;

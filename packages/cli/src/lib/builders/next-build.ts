@@ -174,12 +174,15 @@ export class NextBuilder extends BaseBuilder {
       };
 
       const rebuildExistingFiles = async () => {
-        console.time('Rebuilt steps bundle');
+        const rebuiltStepStart = Date.now();
         const stepsResult = await stepsCtx.rebuild();
         logBuildMessages(stepsResult, 'steps bundle');
-        console.timeEnd('Rebuilt steps bundle');
+        console.log(
+          'Rebuilt steps bundle',
+          Date.now() - rebuiltStepStart + 'ms'
+        );
 
-        console.time('Rebuilt workflow bundle');
+        const rebuiltWorkflowStart = Date.now();
         const workflowResult = await workflowsCtx.interimBundleCtx.rebuild();
         logBuildMessages(workflowResult, 'workflows bundle');
 
@@ -193,7 +196,10 @@ export class NextBuilder extends BaseBuilder {
           return;
         }
         await workflowsCtx.bundleFinal(workflowResult.outputFiles[0].text);
-        console.timeEnd('Rebuilt workflow bundle');
+        console.log(
+          'Rebuilt workflow bundle',
+          Date.now() - rebuiltWorkflowStart + 'ms'
+        );
       };
 
       const isWatchableFile = (path: string) =>

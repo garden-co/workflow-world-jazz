@@ -1,10 +1,8 @@
 import { runInContext } from 'node:vm';
 import { createContext } from '@vercel/workflow-vm';
+import type { Event, WorkflowRun } from '@vercel/workflow-world';
 import { monotonicFactory } from 'ulid';
-
-import type { Event, WorkflowRun } from './world/index.js';
 import { EventConsumerResult, EventsConsumer } from './events-consumer.js';
-import type { WorkflowContext } from './get-context.js';
 import { ENOTSUP } from './global.js';
 import type { WorkflowOrchestratorContext } from './private.js';
 import {
@@ -15,7 +13,8 @@ import { createUseStep } from './step.js';
 import * as Attribute from './telemetry/semantic-conventions.js';
 import { trace } from './telemetry.js';
 import { withResolvers } from './util.js';
-import { WORKFLOW_CONTEXT_SYMBOL } from './workflow/get-context.js';
+import type { WorkflowContext } from './workflow/get-workflow-context.js';
+import { WORKFLOW_CONTEXT_SYMBOL } from './workflow/get-workflow-context.js';
 import { createGetWebhook } from './workflow/webhook.js';
 
 export async function runWorkflow(
@@ -85,15 +84,6 @@ export async function runWorkflow(
     const ctx: WorkflowContext = {
       workflowRunId: workflowRun.runId,
       workflowStartedAt: new vmGlobalThis.Date(+startedAt),
-      get stepId(): string {
-        throw ENOTSUP();
-      },
-      get stepStartedAt(): Date {
-        throw ENOTSUP();
-      },
-      get attempt(): number {
-        throw ENOTSUP();
-      },
       url,
     };
     // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
@@ -291,7 +281,7 @@ export async function runWorkflow(
 
     // Get a reference to the user-defined workflow function
     const workflowFn = runInContext(
-      `${workflowCode};${workflowRun.workflowName}`,
+      `${workflowCode}; globalThis.__private_workflows?.get(${JSON.stringify(workflowRun.workflowName)})`,
       context
     );
 
