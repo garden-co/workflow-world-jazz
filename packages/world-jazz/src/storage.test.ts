@@ -106,7 +106,7 @@ describe('Jazz Storage', () => {
       });
 
       it('should throw error when run does not exist', async () => {
-        await expect(storage.runs.get('non-existent-id')).rejects.toThrow();
+        await expect(storage.runs.get('co_z123')).rejects.toThrow();
       });
 
       it('should retrieve run with all fields populated', async () => {
@@ -222,7 +222,7 @@ describe('Jazz Storage', () => {
 
       it('should throw error when run does not exist', async () => {
         await expect(
-          storage.runs.update('non-existent-id', { status: 'running' })
+          storage.runs.update('co_z123', { status: 'running' })
         ).rejects.toThrow();
       });
 
@@ -397,7 +397,7 @@ describe('Jazz Storage', () => {
       });
 
       it('should throw error when trying to cancel non-existent run', async () => {
-        await expect(storage.runs.cancel('non-existent-id')).rejects.toThrow();
+        await expect(storage.runs.cancel('co_z123')).rejects.toThrow();
       });
     });
 
@@ -420,7 +420,7 @@ describe('Jazz Storage', () => {
       });
 
       it('should throw error when trying to pause non-existent run', async () => {
-        await expect(storage.runs.pause('non-existent-id')).rejects.toThrow();
+        await expect(storage.runs.pause('co_z123')).rejects.toThrow();
       });
     });
 
@@ -448,7 +448,7 @@ describe('Jazz Storage', () => {
       });
 
       it('should throw error when trying to resume non-existent run', async () => {
-        await expect(storage.runs.resume('non-existent-id')).rejects.toThrow();
+        await expect(storage.runs.resume('co_z123')).rejects.toThrow();
       });
     });
 
