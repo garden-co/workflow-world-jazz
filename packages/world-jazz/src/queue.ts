@@ -20,11 +20,9 @@ const JazzWebhookPayload = z.object({
 
 export const createQueue = (
   ensureLoaded: JazzStorageAccountResolver,
-  port: number
+  webhookEndpoint: string,
+  webhookRegistryId: string
 ): Queue => {
-  if (!process.env.JAZZ_WEBHOOK_REGISTRY_ID) {
-    throw new Error('JAZZ_WEBHOOK_REGISTRY_ID environment variable is not set');
-  }
   const processedMessages = new Set<string>();
 
   return {
@@ -70,9 +68,8 @@ export const createQueue = (
             queues.$jazz.set(queueName, queue);
 
             await registerWebhook(
-              // biome-ignore lint/style/noNonNullAssertion: verified above
-              process.env.JAZZ_WEBHOOK_REGISTRY_ID!,
-              `http://localhost:${port}/.well-known/workflow/v1/${pathname}`,
+              webhookRegistryId,
+              `${webhookEndpoint}/.well-known/workflow/v1/${pathname}`,
               queue.messages.$jazz.id
             );
 

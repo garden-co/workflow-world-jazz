@@ -19,15 +19,16 @@ describe('Jazz Queue', () => {
     registerWebhook: vi.fn().mockResolvedValue('mock-webhook-id'),
   }));
 
-  // Set up environment variable for tests
-  process.env.JAZZ_WEBHOOK_REGISTRY_ID = 'test-registry-id';
-
   let queue: Queue;
   let ensureLoaded: JazzStorageAccountResolver;
 
   beforeEach(() => {
     ensureLoaded = createJazzTestAccountResolver();
-    queue = createQueue(ensureLoaded, 9999);
+    queue = createQueue(
+      ensureLoaded,
+      'http://test-host:9999',
+      'test-registry-id'
+    );
   });
 
   describe('getDeploymentId', () => {
