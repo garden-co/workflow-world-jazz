@@ -25,6 +25,45 @@ export const createQueue = (
 ): Queue => {
   const processedMessages = new Set<string>();
 
+  const queueFactory = async (
+    name: string,
+    webhookPath: string
+  ): Promise<JazzQueue> => {
+    const queues = (
+      await ensureLoaded({
+        root: {
+          queues: true,
+        },
+      })
+    ).root.queues;
+
+    // Queue exists but is not loaded
+    if (queues[name] === null) {
+      // biome-ignore lint/style/noNonNullAssertion: ensureLoaded throws if the stream is not found
+      return (await queues.$jazz.ensureLoaded({ resolve: { [name]: true } }))[
+        name
+      ]!;
+    }
+
+    // Queue does not exist
+    if (queues[name] === undefined) {
+      const queue = JazzQueue.create({
+        name: name as ValidQueueName,
+        messages: [],
+      });
+      queues.$jazz.set(name, queue);
+
+      await registerWebhook(
+        webhookRegistryId,
+        `${webhookEndpoint}/.well-known/workflow/v1/${webhookPath}`,
+        queue.messages.$jazz.id
+      );
+    }
+
+    // Queue exists and is loaded
+    return queues[name];
+  };
+
   return {
     async getDeploymentId(): Promise<string> {
       return 'dpl_jazz';
@@ -38,44 +77,16 @@ export const createQueue = (
         idempotencyKey?: string;
       }
     ): Promise<{ messageId: MessageId }> {
-      const queues = (
-        await ensureLoaded({
-          root: {
-            queues: true,
-          },
-        })
-      ).root.queues;
-
-      let pathname: string;
+      let webhookPath: string;
       if (queueName.startsWith('__wkf_step_')) {
-        pathname = `step`;
+        webhookPath = `step`;
       } else if (queueName.startsWith('__wkf_workflow_')) {
-        pathname = `flow`;
+        webhookPath = `flow`;
       } else {
         throw new Error('Unknown queue name prefix');
       }
 
-      // biome-ignore lint/style/noNonNullAssertion: ensureLoaded throws if the stream is not found
-      const queue = (
-        await queues.$jazz
-          .ensureLoaded({
-            resolve: {
-              [queueName]: true,
-            },
-          })
-          .catch(async () => {
-            const queue = JazzQueue.create({ name: queueName, messages: [] });
-            queues.$jazz.set(queueName, queue);
-
-            await registerWebhook(
-              webhookRegistryId,
-              `${webhookEndpoint}/.well-known/workflow/v1/${pathname}`,
-              queue.messages.$jazz.id
-            );
-
-            return { [queueName]: queue };
-          })
-      )[queueName]!;
+      const queue = await queueFactory(queueName, webhookPath);
 
       const messages = (
         await queue.$jazz.ensureLoaded({
