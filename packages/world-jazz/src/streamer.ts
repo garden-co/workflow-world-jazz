@@ -1,37 +1,29 @@
 import type { Streamer } from '@vercel/workflow-world';
 import { co, type FileStream } from 'jazz-tools';
-import type { JazzStorageAccountResolver } from './types.js';
+import { type JazzStorageAccountResolver, JazzStream } from './types.js';
 
 export const createStreamer = (
   ensureLoaded: JazzStorageAccountResolver
 ): Streamer => {
   const streamFactory = async (name: string): Promise<FileStream> => {
-    const streams = (
-      await ensureLoaded({
-        root: {
-          streams: true,
-        },
-      })
-    ).root.streams;
+    const root = (await ensureLoaded({ root: true })).root;
 
-    // Stream exists but is not loaded
-    if (streams[name] === null) {
-      // biome-ignore lint/style/noNonNullAssertion: ensureLoaded throws if the stream is not found
-      return (await streams.$jazz.ensureLoaded({ resolve: { [name]: true } }))[
-        name
-      ]!;
+    const unique = `stream/${name}`;
+    let js = await JazzStream.loadUnique(unique, root.$jazz.owner.$jazz.id, {
+      resolve: {
+        stream: true,
+      },
+    });
+    if (js) {
+      return js.stream;
     }
 
-    // Stream does not exist
-    if (streams[name] === undefined) {
-      const fs = co.fileStream().create();
-      fs.start({ mimeType: 'application/octet-stream' });
-      streams.$jazz.set(name, fs);
-      return fs;
-    }
-
-    // Stream exists and is loaded
-    return streams[name];
+    js = JazzStream.create(
+      { name, stream: co.fileStream().create() },
+      { unique, owner: root.$jazz.owner }
+    );
+    js.stream.start({ mimeType: 'application/octet-stream' });
+    return js.stream;
   };
 
   return {
