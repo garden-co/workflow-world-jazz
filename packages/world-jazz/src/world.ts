@@ -1,6 +1,6 @@
 import type { AuthProvider, World } from '@vercel/workflow-world';
 import { startWorker } from 'jazz-tools/worker';
-import { config } from './config.js';
+import { loadConfig } from './config.js';
 import { createQueue } from './queue.js';
 import { createStorage } from './storage.js';
 import { createStreamer } from './streamer.js';
@@ -15,10 +15,11 @@ export function createJazzWorld(port?: number): World {
   if (world) {
     return world;
   }
+  const config = loadConfig(port);
 
   const workerPromise = (async () => {
     const { worker } = await startWorker({
-      syncServer: `wss://cloud.jazz.tools/?key=${process.env.JAZZ_API_KEY}`,
+      syncServer: config.syncServer,
       AccountSchema: JazzStorageAccount,
     });
     return worker;
@@ -31,7 +32,11 @@ export function createJazzWorld(port?: number): World {
 
   world = {
     ...authImpl,
-    ...createQueue(ensureLoaded, port ?? config.port),
+    ...createQueue(
+      ensureLoaded,
+      config.webhookEndpoint,
+      config.webhookRegistryId
+    ),
     ...createStorage(ensureLoaded),
     ...createStreamer(ensureLoaded),
   };
