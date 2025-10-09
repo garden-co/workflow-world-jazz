@@ -95,7 +95,6 @@ export const JazzStorageRoot = co.map({
   steps: co.record(z.string(), co.record(z.string(), JazzStep)),
   events: co.record(z.string(), co.list(JazzEvent)),
   webhooks: co.record(z.string(), JazzWebhook),
-  queues: co.record(z.string(), JazzQueue),
 });
 
 export type JazzStorageRoot = co.loaded<typeof JazzStorageRoot>;
@@ -118,15 +117,11 @@ export const JazzStorageAccount = co
       const webhooks = co
         .record(z.string(), JazzWebhook)
         .create({}, { owner: defaultGroup });
-      const queues = co
-        .record(z.string(), JazzQueue)
-        .create({}, { owner: defaultGroup });
       account.$jazz.set('root', {
         runs,
         events,
         steps,
         webhooks,
-        queues,
       });
     }
 
@@ -158,12 +153,6 @@ export const JazzStorageAccount = co
       root.$jazz.set(
         'webhooks',
         co.record(z.string(), JazzWebhook).create({}, Group.create())
-      );
-    }
-    if (root.queues === undefined) {
-      root.$jazz.set(
-        'queues',
-        co.record(z.string(), JazzQueue).create({}, Group.create())
       );
     }
   });

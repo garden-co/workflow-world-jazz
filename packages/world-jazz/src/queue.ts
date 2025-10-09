@@ -29,39 +29,30 @@ export const createQueue = (
     name: string,
     webhookPath: string
   ): Promise<JazzQueue> => {
-    const queues = (
-      await ensureLoaded({
-        root: {
-          queues: true,
-        },
-      })
-    ).root.queues;
+    const root = (await ensureLoaded({ root: true })).root;
 
-    // Queue exists but is not loaded
-    if (queues[name] === null) {
-      // biome-ignore lint/style/noNonNullAssertion: ensureLoaded throws if the stream is not found
-      return (await queues.$jazz.ensureLoaded({ resolve: { [name]: true } }))[
-        name
-      ]!;
+    const unique = `queue/${name}`;
+    let jq = await JazzQueue.loadUnique(unique, root.$jazz.owner.$jazz.id);
+    if (jq) {
+      return jq;
     }
 
-    // Queue does not exist
-    if (queues[name] === undefined) {
-      const queue = JazzQueue.create({
+    const messages = JazzQueueMessages.create([]);
+    jq = JazzQueue.create(
+      {
         name: name as ValidQueueName,
-        messages: [],
-      });
-      queues.$jazz.set(name, queue);
+        messages,
+      },
+      { unique, owner: root.$jazz.owner }
+    );
 
-      await registerWebhook(
-        webhookRegistryId,
-        `${webhookEndpoint}/.well-known/workflow/v1/${webhookPath}`,
-        queue.messages.$jazz.id
-      );
-    }
+    await registerWebhook(
+      webhookRegistryId,
+      `${webhookEndpoint}/.well-known/workflow/v1/${webhookPath}`,
+      messages.$jazz.id
+    );
 
-    // Queue exists and is loaded
-    return queues[name];
+    return jq;
   };
 
   return {
