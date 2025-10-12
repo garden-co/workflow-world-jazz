@@ -25,7 +25,7 @@ export const createQueue = (
 ): Queue => {
   const processedMessages = new Set<string>();
 
-  const queueFactory = async (
+  const loadOrCreateQueue = async (
     name: string,
     webhookPath: string
   ): Promise<JazzQueue> => {
@@ -37,16 +37,15 @@ export const createQueue = (
       })
     ).root.queues;
 
-    // Queue exists but is not loaded
-    if (queues[name] === null) {
-      // biome-ignore lint/style/noNonNullAssertion: ensureLoaded throws if the stream is not found
-      return (await queues.$jazz.ensureLoaded({ resolve: { [name]: true } }))[
-        name
-      ]!;
-    }
+    const queueRef = queues.$jazz.refs[name];
 
-    // Queue does not exist
-    if (queues[name] === undefined) {
+    if (queueRef) {
+      const queue = await queueRef.load();
+      if (!queue) {
+        throw new Error(`Queue ${name} not found`);
+      }
+      return queue;
+    } else {
       const queue = JazzQueue.create({
         name: name as ValidQueueName,
         messages: [],
@@ -58,10 +57,9 @@ export const createQueue = (
         `${webhookEndpoint}/.well-known/workflow/v1/${webhookPath}`,
         queue.messages.$jazz.id
       );
-    }
 
-    // Queue exists and is loaded
-    return queues[name];
+      return queue;
+    }
   };
 
   return {
@@ -86,7 +84,7 @@ export const createQueue = (
         throw new Error('Unknown queue name prefix');
       }
 
-      const queue = await queueFactory(queueName, webhookPath);
+      const queue = await loadOrCreateQueue(queueName, webhookPath);
 
       const messages = (
         await queue.$jazz.ensureLoaded({

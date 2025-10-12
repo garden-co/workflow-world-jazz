@@ -193,7 +193,7 @@ export const createRunStorage = (
 export const createStepStorage = (
   ensureLoaded: JazzStorageAccountResolver
 ): Storage['steps'] => {
-  const runStepsFactory = async (runId: string) => {
+  const loadOrCreateSteps = async (runId: string) => {
     const stepsByRunId = (
       await ensureLoaded({
         root: {
@@ -202,31 +202,23 @@ export const createStepStorage = (
       })
     ).root.steps;
 
-    // Steps for this run exists, but they're not loaded
-    if (stepsByRunId[runId] === null) {
-      // biome-ignore lint/style/noNonNullAssertion: it's null (vs. undefined) because it exists
-      return (
-        await stepsByRunId.$jazz.ensureLoaded({
-          resolve: {
-            [runId]: true,
-          },
-        })
-      )[runId]!;
-    }
+    const stepsRef = stepsByRunId.$jazz.refs[runId];
 
-    // Steps for this run do not exist
-    if (stepsByRunId[runId] === undefined) {
+    if (stepsRef) {
+      const steps = await stepsRef.load();
+      if (!steps) {
+        throw new Error(`Steps for run ${runId} not found`);
+      }
+      return steps;
+    } else {
       const runSteps = co.record(z.string(), JazzStep).create({});
       stepsByRunId.$jazz.set(runId, runSteps);
       return runSteps;
     }
-
-    // Steps for this run exist and are loaded
-    return stepsByRunId[runId];
   };
 
   const getRunStep = async (runId: string, stepId: string) => {
-    const steps = await runStepsFactory(runId);
+    const steps = await loadOrCreateSteps(runId);
     if (steps[stepId] === undefined) {
       throw new Error(`Step ${stepId} in run ${runId} not found`);
     }
@@ -257,7 +249,7 @@ export const createStepStorage = (
         updatedAt: now,
       });
 
-      const steps = await runStepsFactory(runId);
+      const steps = await loadOrCreateSteps(runId);
       steps.$jazz.set(data.stepId, js);
 
       return toStep(js);
@@ -304,7 +296,7 @@ export const createStepStorage = (
     async list(
       params: ListWorkflowRunStepsParams
     ): Promise<PaginatedResponse<Step>> {
-      const steps = await runStepsFactory(params.runId);
+      const steps = await loadOrCreateSteps(params.runId);
       const eligibleSteps = Object.values(steps).filter((js) => js !== null);
       return paginateItems({
         items: eligibleSteps,
@@ -385,15 +377,11 @@ export const createWebhookStorage = (
       const webhooks = await loadWebhooks();
 
       const eligibleWebhooks: JazzWebhook[] = [];
-      for (const webhookId of Object.keys(webhooks)) {
-        // biome-ignore lint/style/noNonNullAssertion: the key exists so the resolved value will
-        const jw = (
-          await webhooks.$jazz.ensureLoaded({
-            resolve: {
-              [webhookId]: true,
-            },
-          })
-        )[webhookId]!;
+      for (const [webhookId, ref] of Object.entries(webhooks.$jazz.refs)) {
+        const jw = await ref.load();
+        if (!jw) {
+          throw new Error(`Webhook ${webhookId} not found`);
+        }
 
         if (jw.url === url) {
           eligibleWebhooks.push(jw);
@@ -422,7 +410,7 @@ export const createWebhookStorage = (
 export const createEventStorage = (
   ensureLoaded: JazzStorageAccountResolver
 ): Storage['events'] => {
-  const runEventsFactory = async (runId: string) => {
+  const loadOrCreateEvents = async (runId: string) => {
     const eventsByRunId = (
       await ensureLoaded({
         root: {
@@ -431,27 +419,19 @@ export const createEventStorage = (
       })
     ).root.events;
 
-    // Events for this run exists, but they're not loaded
-    if (eventsByRunId[runId] === null) {
-      // biome-ignore lint/style/noNonNullAssertion: it's null (vs. undefined) because it exists
-      return (
-        await eventsByRunId.$jazz.ensureLoaded({
-          resolve: {
-            [runId]: true,
-          },
-        })
-      )[runId]!;
-    }
+    const eventsRef = eventsByRunId.$jazz.refs[runId];
 
-    // Events for this run do not exist
-    if (eventsByRunId[runId] === undefined) {
+    if (eventsRef) {
+      const events = await eventsRef.load();
+      if (!events) {
+        throw new Error(`Events for run ${runId} not found`);
+      }
+      return events;
+    } else {
       const runEvents = co.list(JazzEvent).create([]);
       eventsByRunId.$jazz.set(runId, runEvents);
       return runEvents;
     }
-
-    // Events for this run exist and are loaded
-    return eventsByRunId[runId];
   };
 
   return {
@@ -464,14 +444,14 @@ export const createEventStorage = (
         ...(data as any),
       });
 
-      const events = await runEventsFactory(runId);
+      const events = await loadOrCreateEvents(runId);
       events.$jazz.push(je);
 
       return toEvent(je);
     },
 
     async list(params: ListEventsParams): Promise<PaginatedResponse<Event>> {
-      const events = await runEventsFactory(params.runId);
+      const events = await loadOrCreateEvents(params.runId);
       const loadedEvents = await events.$jazz.ensureLoaded({
         resolve: {
           $each: true,

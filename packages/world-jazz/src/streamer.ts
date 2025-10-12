@@ -5,7 +5,7 @@ import type { JazzStorageAccountResolver } from './types.js';
 export const createStreamer = (
   ensureLoaded: JazzStorageAccountResolver
 ): Streamer => {
-  const streamFactory = async (name: string): Promise<FileStream> => {
+  const loadOrCreateStream = async (name: string): Promise<FileStream> => {
     const streams = (
       await ensureLoaded({
         root: {
@@ -14,29 +14,25 @@ export const createStreamer = (
       })
     ).root.streams;
 
-    // Stream exists but is not loaded
-    if (streams[name] === null) {
-      // biome-ignore lint/style/noNonNullAssertion: ensureLoaded throws if the stream is not found
-      return (await streams.$jazz.ensureLoaded({ resolve: { [name]: true } }))[
-        name
-      ]!;
-    }
+    const streamRef = streams.$jazz.refs[name];
 
-    // Stream does not exist
-    if (streams[name] === undefined) {
+    if (streamRef) {
+      const stream = await streamRef.load();
+      if (!stream) {
+        throw new Error(`Stream ${name} not found`);
+      }
+      return stream;
+    } else {
       const fs = co.fileStream().create();
       fs.start({ mimeType: 'application/octet-stream' });
       streams.$jazz.set(name, fs);
       return fs;
     }
-
-    // Stream exists and is loaded
-    return streams[name];
   };
 
   return {
     async writeToStream(name: string, chunk: string | Uint8Array | Buffer) {
-      const stream = await streamFactory(name);
+      const stream = await loadOrCreateStream(name);
 
       // Convert chunk to Uint8Array if needed
       let chunkData: Uint8Array;
@@ -52,7 +48,7 @@ export const createStreamer = (
     },
 
     async closeStream(name: string) {
-      const stream = await streamFactory(name);
+      const stream = await loadOrCreateStream(name);
       stream.end();
     },
 
@@ -60,7 +56,7 @@ export const createStreamer = (
       name: string,
       startIndex = 0
     ): Promise<ReadableStream<Uint8Array>> {
-      const stream = await streamFactory(name);
+      const stream = await loadOrCreateStream(name);
 
       let unsubscribe: () => void;
       return new ReadableStream<Uint8Array>({
