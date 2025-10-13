@@ -297,6 +297,11 @@ export const createStepStorage = (
       params: ListWorkflowRunStepsParams
     ): Promise<PaginatedResponse<Step>> {
       const steps = await loadOrCreateSteps(params.runId);
+      await steps.$jazz.ensureLoaded({
+        resolve: {
+          $each: true,
+        },
+      });
       const eligibleSteps = Object.values(steps).filter((js) => js !== null);
       return paginateItems({
         items: eligibleSteps,
