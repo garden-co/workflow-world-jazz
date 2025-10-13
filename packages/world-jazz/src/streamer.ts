@@ -5,7 +5,7 @@ import { type JazzStorageAccountResolver, JazzStream } from './types.js';
 export const createStreamer = (
   ensureLoaded: JazzStorageAccountResolver
 ): Streamer => {
-  const streamFactory = async (name: string): Promise<FileStream> => {
+  const loadOrCreateStream = async (name: string): Promise<FileStream> => {
     const root = (await ensureLoaded({ root: true })).root;
 
     const unique = `stream/${name}`;
@@ -28,7 +28,7 @@ export const createStreamer = (
 
   return {
     async writeToStream(name: string, chunk: string | Uint8Array | Buffer) {
-      const stream = await streamFactory(name);
+      const stream = await loadOrCreateStream(name);
 
       // Convert chunk to Uint8Array if needed
       let chunkData: Uint8Array;
@@ -44,7 +44,7 @@ export const createStreamer = (
     },
 
     async closeStream(name: string) {
-      const stream = await streamFactory(name);
+      const stream = await loadOrCreateStream(name);
       stream.end();
     },
 
@@ -52,7 +52,7 @@ export const createStreamer = (
       name: string,
       startIndex = 0
     ): Promise<ReadableStream<Uint8Array>> {
-      const stream = await streamFactory(name);
+      const stream = await loadOrCreateStream(name);
 
       let unsubscribe: () => void;
       return new ReadableStream<Uint8Array>({

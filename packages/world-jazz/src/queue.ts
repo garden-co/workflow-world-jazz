@@ -25,7 +25,7 @@ export const createQueue = (
 ): Queue => {
   const processedMessages = new Set<string>();
 
-  const queueFactory = async (
+  const loadOrCreateQueue = async (
     name: string,
     webhookPath: string
   ): Promise<JazzQueue> => {
@@ -77,7 +77,7 @@ export const createQueue = (
         throw new Error('Unknown queue name prefix');
       }
 
-      const queue = await queueFactory(queueName, webhookPath);
+      const queue = await loadOrCreateQueue(queueName, webhookPath);
 
       const messages = (
         await queue.$jazz.ensureLoaded({
