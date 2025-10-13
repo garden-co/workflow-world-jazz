@@ -83,13 +83,18 @@ export const JazzQueue = co.map({
 
 export type JazzQueue = co.loaded<typeof JazzQueue>;
 
+export const JazzStream = co.map({
+  name: z.string(),
+  stream: co.fileStream(),
+});
+
+export type JazzStream = co.loaded<typeof JazzStream>;
+
 export const JazzStorageRoot = co.map({
   runs: co.list(JazzWorkflowRun),
   steps: co.record(z.string(), co.record(z.string(), JazzStep)),
   events: co.record(z.string(), co.list(JazzEvent)),
   webhooks: co.record(z.string(), JazzWebhook),
-  streams: co.record(z.string(), co.fileStream()),
-  queues: co.record(z.string(), JazzQueue),
 });
 
 export type JazzStorageRoot = co.loaded<typeof JazzStorageRoot>;
@@ -112,19 +117,11 @@ export const JazzStorageAccount = co
       const webhooks = co
         .record(z.string(), JazzWebhook)
         .create({}, { owner: defaultGroup });
-      const streams = co
-        .record(z.string(), co.fileStream())
-        .create({}, { owner: defaultGroup });
-      const queues = co
-        .record(z.string(), JazzQueue)
-        .create({}, { owner: defaultGroup });
       account.$jazz.set('root', {
         runs,
         events,
         steps,
         webhooks,
-        streams,
-        queues,
       });
     }
 
@@ -156,18 +153,6 @@ export const JazzStorageAccount = co
       root.$jazz.set(
         'webhooks',
         co.record(z.string(), JazzWebhook).create({}, Group.create())
-      );
-    }
-    if (root.streams === undefined) {
-      root.$jazz.set(
-        'streams',
-        co.record(z.string(), co.fileStream()).create({}, Group.create())
-      );
-    }
-    if (root.queues === undefined) {
-      root.$jazz.set(
-        'queues',
-        co.record(z.string(), JazzQueue).create({}, Group.create())
       );
     }
   });

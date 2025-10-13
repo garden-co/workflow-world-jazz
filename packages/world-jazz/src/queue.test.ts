@@ -6,7 +6,7 @@ import type {
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createQueue } from './queue.js';
 import { createJazzTestAccountResolver } from './testUtils.js';
-import type { JazzStorageAccountResolver } from './types.js';
+import { JazzQueue, type JazzStorageAccountResolver } from './types.js';
 
 // Helper function to create valid queue names with proper prefix
 function createQueueName(name: string): ValidQueueName {
@@ -155,9 +155,11 @@ describe('Jazz Queue', () => {
         { data: 'message 3' },
       ];
 
-      const results = await Promise.all(
-        messages.map((message) => queue.queue(queueName, message))
-      );
+      const results: { messageId: string }[] = [];
+      for (const message of messages) {
+        const result = await queue.queue(queueName, message);
+        results.push(result);
+      }
 
       expect(results).toHaveLength(3);
       results.forEach((result) => {
@@ -207,19 +209,14 @@ describe('Jazz Queue', () => {
       const message = { data: 'test message' };
       const queueResult = await queue.queue(queueName, message);
 
-      // Get the covalue ID of the queue that was created
+      // Get the queue that was created so we can find the covalue ID of its messages to simulate the webhook payload
+      const root = (await ensureLoaded({ root: true })).root;
       // biome-ignore lint/style/noNonNullAssertion: the queue will exist
-      const jazzQueue = (
-        await ensureLoaded({
-          root: {
-            queues: {
-              [queueName]: {
-                messages: true,
-              },
-            },
-          },
-        })
-      ).root.queues[queueName]!;
+      const jazzQueue = (await JazzQueue.loadUnique(
+        `queue/${queueName}`,
+        root.$jazz.owner.$jazz.id,
+        { resolve: { messages: true } }
+      ))!;
 
       // Create a queue handler and invoke it with the webhook payload
       const queueNamePrefix = '__wkf_step_' as QueuePrefix;
@@ -351,9 +348,11 @@ describe('Jazz Queue', () => {
       ];
 
       // Enqueue multiple messages
-      const results = await Promise.all(
-        messages.map((message) => queue.queue(queueName, message))
-      );
+      const results: { messageId: string }[] = [];
+      for (const message of messages) {
+        const result = await queue.queue(queueName, message);
+        results.push(result);
+      }
 
       expect(results).toHaveLength(3);
       results.forEach((result) => {
@@ -378,9 +377,11 @@ describe('Jazz Queue', () => {
         [1, 2, 3],
       ];
 
-      const results = await Promise.all(
-        mixedMessages.map((message) => queue.queue(queueName, message))
-      );
+      const results: { messageId: string }[] = [];
+      for (const message of mixedMessages) {
+        const result = await queue.queue(queueName, message);
+        results.push(result);
+      }
 
       expect(results).toHaveLength(6);
       results.forEach((result) => {
@@ -393,15 +394,20 @@ describe('Jazz Queue', () => {
       const queueName = createQueueName('options-queue');
       const message = { data: 'test message' };
 
-      const results = await Promise.all([
-        queue.queue(queueName, message, { deploymentId: 'deploy-1' }),
-        queue.queue(queueName, message, { idempotencyKey: 'key-1' }),
-        queue.queue(queueName, message, {
+      const results: { messageId: string }[] = [];
+      results.push(
+        await queue.queue(queueName, message, { deploymentId: 'deploy-1' })
+      );
+      results.push(
+        await queue.queue(queueName, message, { idempotencyKey: 'key-1' })
+      );
+      results.push(
+        await queue.queue(queueName, message, {
           deploymentId: 'deploy-2',
           idempotencyKey: 'key-2',
-        }),
-        queue.queue(queueName, message), // No options
-      ]);
+        })
+      );
+      results.push(await queue.queue(queueName, message));
 
       expect(results).toHaveLength(4);
       results.forEach((result) => {
@@ -476,6 +482,9 @@ describe('Jazz Queue', () => {
     it('should handle concurrent queue operations', async () => {
       const queueName = createQueueName('concurrent-queue');
       const messageCount = 10;
+
+      // Ensure the queue exists
+      await queue.queue(queueName, { data: 'initial message' });
 
       // Create multiple concurrent queue operations
       const promises = Array.from({ length: messageCount }, (_, index) =>

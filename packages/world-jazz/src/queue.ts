@@ -29,37 +29,30 @@ export const createQueue = (
     name: string,
     webhookPath: string
   ): Promise<JazzQueue> => {
-    const queues = (
-      await ensureLoaded({
-        root: {
-          queues: true,
-        },
-      })
-    ).root.queues;
+    const root = (await ensureLoaded({ root: true })).root;
 
-    const queueRef = queues.$jazz.refs[name];
-
-    if (queueRef) {
-      const queue = await queueRef.load();
-      if (!queue) {
-        throw new Error(`Queue ${name} not found`);
-      }
-      return queue;
-    } else {
-      const queue = JazzQueue.create({
-        name: name as ValidQueueName,
-        messages: [],
-      });
-      queues.$jazz.set(name, queue);
-
-      await registerWebhook(
-        webhookRegistryId,
-        `${webhookEndpoint}/.well-known/workflow/v1/${webhookPath}`,
-        queue.messages.$jazz.id
-      );
-
-      return queue;
+    const unique = `queue/${name}`;
+    let jq = await JazzQueue.loadUnique(unique, root.$jazz.owner.$jazz.id);
+    if (jq) {
+      return jq;
     }
+
+    const messages = JazzQueueMessages.create([]);
+    jq = JazzQueue.create(
+      {
+        name: name as ValidQueueName,
+        messages,
+      },
+      { unique, owner: root.$jazz.owner }
+    );
+
+    await registerWebhook(
+      webhookRegistryId,
+      `${webhookEndpoint}/.well-known/workflow/v1/${webhookPath}`,
+      messages.$jazz.id
+    );
+
+    return jq;
   };
 
   return {
