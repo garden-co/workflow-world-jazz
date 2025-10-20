@@ -54,11 +54,11 @@ export const createQueue = (
       { unique, owner: root.$jazz.owner }
     );
 
-    await registerWebhook(
-      webhookRegistryId,
-      `${webhookEndpoint}/.well-known/workflow/v1/${webhookPath}`,
-      messages.$jazz.id
-    );
+    await registerWebhook({
+      registryId: webhookRegistryId,
+      webhookUrl: `${webhookEndpoint}/.well-known/workflow/v1/${webhookPath}`,
+      coValueId: messages.$jazz.id,
+    });
 
     return jq;
   };

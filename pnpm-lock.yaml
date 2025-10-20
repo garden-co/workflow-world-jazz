@@ -1022,11 +1022,11 @@ importers:
         specifier: workspace:*
         version: link:../world
       jazz-tools:
-        specifier: https://pkg.pr.new/garden-co/jazz/jazz-tools@e0ddd47e42ac3848ec3db794bbf390375513f180
-        version: https://pkg.pr.new/garden-co/jazz/jazz-tools@e0ddd47e42ac3848ec3db794bbf390375513f180(@tiptap/pm@2.26.3)(csstype@3.1.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        specifier: https://pkg.pr.new/garden-co/jazz/jazz-tools@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6
+        version: https://pkg.pr.new/garden-co/jazz/jazz-tools@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6(@tiptap/pm@2.26.3)(csstype@3.1.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       jazz-webhook:
-        specifier: https://pkg.pr.new/garden-co/jazz/jazz-webhook@e0ddd47e42ac3848ec3db794bbf390375513f180
-        version: https://pkg.pr.new/garden-co/jazz/jazz-webhook@e0ddd47e42ac3848ec3db794bbf390375513f180(@tiptap/pm@2.26.3)(csstype@3.1.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        specifier: https://pkg.pr.new/garden-co/jazz/jazz-webhook@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6
+        version: https://pkg.pr.new/garden-co/jazz/jazz-webhook@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6(@tiptap/pm@2.26.3)(csstype@3.1.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       zod:
         specifier: 'catalog:'
         version: 4.1.11
@@ -4670,78 +4670,78 @@ packages:
   code-block-writer@13.0.3:
     resolution: {integrity: sha512-Oofo0pq3IKnsFtuHqSF7TqBfr71aeyZDVJ0HpmqB7FBM2qEigL0iPONSCZSO9pE9dZTAxANe5XHG9Uy0YMv8cg==}
 
-  cojson-core-napi-darwin-arm64@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-darwin-arm64@e0ddd47e42ac3848ec3db794bbf390375513f180:
-    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-darwin-arm64@e0ddd47e42ac3848ec3db794bbf390375513f180}
+  cojson-core-napi-darwin-arm64@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-darwin-arm64@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
+    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-darwin-arm64@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6}
     version: 0.18.27
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [darwin]
 
-  cojson-core-napi-darwin-x64@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-darwin-x64@e0ddd47e42ac3848ec3db794bbf390375513f180:
-    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-darwin-x64@e0ddd47e42ac3848ec3db794bbf390375513f180}
+  cojson-core-napi-darwin-x64@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-darwin-x64@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
+    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-darwin-x64@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6}
     version: 0.18.27
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [darwin]
 
-  cojson-core-napi-linux-arm-gnueabihf@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm-gnueabihf@e0ddd47e42ac3848ec3db794bbf390375513f180:
-    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm-gnueabihf@e0ddd47e42ac3848ec3db794bbf390375513f180}
+  cojson-core-napi-linux-arm-gnueabihf@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm-gnueabihf@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
+    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm-gnueabihf@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6}
     version: 0.18.27
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm]
     os: [linux]
 
-  cojson-core-napi-linux-arm64-gnu@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm64-gnu@e0ddd47e42ac3848ec3db794bbf390375513f180:
-    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm64-gnu@e0ddd47e42ac3848ec3db794bbf390375513f180}
+  cojson-core-napi-linux-arm64-gnu@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm64-gnu@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
+    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm64-gnu@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6}
     version: 0.18.27
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [linux]
 
-  cojson-core-napi-linux-arm64-musl@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm64-musl@e0ddd47e42ac3848ec3db794bbf390375513f180:
-    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm64-musl@e0ddd47e42ac3848ec3db794bbf390375513f180}
+  cojson-core-napi-linux-arm64-musl@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm64-musl@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
+    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm64-musl@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6}
     version: 0.18.27
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [arm64]
     os: [linux]
 
-  cojson-core-napi-linux-x64-gnu@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-x64-gnu@e0ddd47e42ac3848ec3db794bbf390375513f180:
-    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-x64-gnu@e0ddd47e42ac3848ec3db794bbf390375513f180}
+  cojson-core-napi-linux-x64-gnu@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-x64-gnu@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
+    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-x64-gnu@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6}
     version: 0.18.27
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [linux]
 
-  cojson-core-napi-linux-x64-musl@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-x64-musl@e0ddd47e42ac3848ec3db794bbf390375513f180:
-    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-x64-musl@e0ddd47e42ac3848ec3db794bbf390375513f180}
+  cojson-core-napi-linux-x64-musl@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-x64-musl@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
+    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-x64-musl@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6}
     version: 0.18.27
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
     cpu: [x64]
     os: [linux]
 
-  cojson-core-napi@https://pkg.pr.new/garden-co/jazz/cojson-core-napi@e0ddd47e42ac3848ec3db794bbf390375513f180:
-    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-core-napi@e0ddd47e42ac3848ec3db794bbf390375513f180}
+  cojson-core-napi@https://pkg.pr.new/garden-co/jazz/cojson-core-napi@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
+    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-core-napi@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6}
     version: 0.18.27
     engines: {node: '>= 12.22.0 < 13 || >= 14.17.0 < 15 || >= 15.12.0 < 16 || >= 16.0.0'}
 
-  cojson-core-wasm@https://pkg.pr.new/garden-co/jazz/cojson-core-wasm@e0ddd47e42ac3848ec3db794bbf390375513f180:
-    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-core-wasm@e0ddd47e42ac3848ec3db794bbf390375513f180}
+  cojson-core-wasm@https://pkg.pr.new/garden-co/jazz/cojson-core-wasm@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
+    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-core-wasm@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6}
     version: 0.18.27
 
-  cojson-storage-indexeddb@https://pkg.pr.new/garden-co/jazz/cojson-storage-indexeddb@e0ddd47e42ac3848ec3db794bbf390375513f180:
-    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-storage-indexeddb@e0ddd47e42ac3848ec3db794bbf390375513f180}
+  cojson-storage-indexeddb@https://pkg.pr.new/garden-co/jazz/cojson-storage-indexeddb@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
+    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-storage-indexeddb@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6}
     version: 0.18.27
 
-  cojson-storage-sqlite@https://pkg.pr.new/garden-co/jazz/cojson-storage-sqlite@e0ddd47e42ac3848ec3db794bbf390375513f180:
-    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-storage-sqlite@e0ddd47e42ac3848ec3db794bbf390375513f180}
+  cojson-storage-sqlite@https://pkg.pr.new/garden-co/jazz/cojson-storage-sqlite@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
+    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-storage-sqlite@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6}
     version: 0.18.27
 
-  cojson-transport-ws@https://pkg.pr.new/garden-co/jazz/cojson-transport-ws@e0ddd47e42ac3848ec3db794bbf390375513f180:
-    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-transport-ws@e0ddd47e42ac3848ec3db794bbf390375513f180}
+  cojson-transport-ws@https://pkg.pr.new/garden-co/jazz/cojson-transport-ws@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
+    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-transport-ws@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6}
     version: 0.18.27
 
-  cojson@https://pkg.pr.new/garden-co/jazz/cojson@e0ddd47e42ac3848ec3db794bbf390375513f180:
-    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson@e0ddd47e42ac3848ec3db794bbf390375513f180}
+  cojson@https://pkg.pr.new/garden-co/jazz/cojson@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
+    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6}
     version: 0.18.27
 
   collapse-white-space@2.1.0:
@@ -5744,8 +5744,8 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  jazz-tools@https://pkg.pr.new/garden-co/jazz/jazz-tools@e0ddd47e42ac3848ec3db794bbf390375513f180:
-    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/jazz-tools@e0ddd47e42ac3848ec3db794bbf390375513f180}
+  jazz-tools@https://pkg.pr.new/garden-co/jazz/jazz-tools@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
+    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/jazz-tools@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6}
     version: 0.18.27
     peerDependencies:
       '@bam.tech/react-native-image-resizer': '*'
@@ -5801,8 +5801,8 @@ packages:
       svelte:
         optional: true
 
-  jazz-webhook@https://pkg.pr.new/garden-co/jazz/jazz-webhook@e0ddd47e42ac3848ec3db794bbf390375513f180:
-    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/jazz-webhook@e0ddd47e42ac3848ec3db794bbf390375513f180}
+  jazz-webhook@https://pkg.pr.new/garden-co/jazz/jazz-webhook@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
+    resolution: {tarball: https://pkg.pr.new/garden-co/jazz/jazz-webhook@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6}
     version: 0.18.27
 
   jiti@2.5.1:
@@ -12079,62 +12079,62 @@ snapshots:
 
   code-block-writer@13.0.3: {}
 
-  cojson-core-napi-darwin-arm64@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-darwin-arm64@e0ddd47e42ac3848ec3db794bbf390375513f180:
+  cojson-core-napi-darwin-arm64@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-darwin-arm64@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
     optional: true
 
-  cojson-core-napi-darwin-x64@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-darwin-x64@e0ddd47e42ac3848ec3db794bbf390375513f180:
+  cojson-core-napi-darwin-x64@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-darwin-x64@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
     optional: true
 
-  cojson-core-napi-linux-arm-gnueabihf@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm-gnueabihf@e0ddd47e42ac3848ec3db794bbf390375513f180:
+  cojson-core-napi-linux-arm-gnueabihf@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm-gnueabihf@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
     optional: true
 
-  cojson-core-napi-linux-arm64-gnu@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm64-gnu@e0ddd47e42ac3848ec3db794bbf390375513f180:
+  cojson-core-napi-linux-arm64-gnu@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm64-gnu@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
     optional: true
 
-  cojson-core-napi-linux-arm64-musl@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm64-musl@e0ddd47e42ac3848ec3db794bbf390375513f180:
+  cojson-core-napi-linux-arm64-musl@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm64-musl@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
     optional: true
 
-  cojson-core-napi-linux-x64-gnu@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-x64-gnu@e0ddd47e42ac3848ec3db794bbf390375513f180:
+  cojson-core-napi-linux-x64-gnu@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-x64-gnu@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
     optional: true
 
-  cojson-core-napi-linux-x64-musl@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-x64-musl@e0ddd47e42ac3848ec3db794bbf390375513f180:
+  cojson-core-napi-linux-x64-musl@https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-x64-musl@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
     optional: true
 
-  cojson-core-napi@https://pkg.pr.new/garden-co/jazz/cojson-core-napi@e0ddd47e42ac3848ec3db794bbf390375513f180:
+  cojson-core-napi@https://pkg.pr.new/garden-co/jazz/cojson-core-napi@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
     optionalDependencies:
-      cojson-core-napi-darwin-arm64: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-darwin-arm64@e0ddd47e42ac3848ec3db794bbf390375513f180
-      cojson-core-napi-darwin-x64: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-darwin-x64@e0ddd47e42ac3848ec3db794bbf390375513f180
-      cojson-core-napi-linux-arm-gnueabihf: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm-gnueabihf@e0ddd47e42ac3848ec3db794bbf390375513f180
-      cojson-core-napi-linux-arm64-gnu: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm64-gnu@e0ddd47e42ac3848ec3db794bbf390375513f180
-      cojson-core-napi-linux-arm64-musl: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm64-musl@e0ddd47e42ac3848ec3db794bbf390375513f180
-      cojson-core-napi-linux-x64-gnu: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-x64-gnu@e0ddd47e42ac3848ec3db794bbf390375513f180
-      cojson-core-napi-linux-x64-musl: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-x64-musl@e0ddd47e42ac3848ec3db794bbf390375513f180
+      cojson-core-napi-darwin-arm64: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-darwin-arm64@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6
+      cojson-core-napi-darwin-x64: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-darwin-x64@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6
+      cojson-core-napi-linux-arm-gnueabihf: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm-gnueabihf@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6
+      cojson-core-napi-linux-arm64-gnu: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm64-gnu@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6
+      cojson-core-napi-linux-arm64-musl: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-arm64-musl@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6
+      cojson-core-napi-linux-x64-gnu: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-x64-gnu@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6
+      cojson-core-napi-linux-x64-musl: https://pkg.pr.new/garden-co/jazz/cojson-core-napi-linux-x64-musl@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6
 
-  cojson-core-wasm@https://pkg.pr.new/garden-co/jazz/cojson-core-wasm@e0ddd47e42ac3848ec3db794bbf390375513f180: {}
+  cojson-core-wasm@https://pkg.pr.new/garden-co/jazz/cojson-core-wasm@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6: {}
 
-  cojson-storage-indexeddb@https://pkg.pr.new/garden-co/jazz/cojson-storage-indexeddb@e0ddd47e42ac3848ec3db794bbf390375513f180:
+  cojson-storage-indexeddb@https://pkg.pr.new/garden-co/jazz/cojson-storage-indexeddb@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
     dependencies:
-      cojson: https://pkg.pr.new/garden-co/jazz/cojson@e0ddd47e42ac3848ec3db794bbf390375513f180
+      cojson: https://pkg.pr.new/garden-co/jazz/cojson@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6
 
-  cojson-storage-sqlite@https://pkg.pr.new/garden-co/jazz/cojson-storage-sqlite@e0ddd47e42ac3848ec3db794bbf390375513f180:
+  cojson-storage-sqlite@https://pkg.pr.new/garden-co/jazz/cojson-storage-sqlite@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
     dependencies:
       better-sqlite3: 11.10.0
-      cojson: https://pkg.pr.new/garden-co/jazz/cojson@e0ddd47e42ac3848ec3db794bbf390375513f180
+      cojson: https://pkg.pr.new/garden-co/jazz/cojson@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6
 
-  cojson-transport-ws@https://pkg.pr.new/garden-co/jazz/cojson-transport-ws@e0ddd47e42ac3848ec3db794bbf390375513f180:
+  cojson-transport-ws@https://pkg.pr.new/garden-co/jazz/cojson-transport-ws@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
     dependencies:
       '@opentelemetry/api': 1.9.0
-      cojson: https://pkg.pr.new/garden-co/jazz/cojson@e0ddd47e42ac3848ec3db794bbf390375513f180
+      cojson: https://pkg.pr.new/garden-co/jazz/cojson@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6
 
-  cojson@https://pkg.pr.new/garden-co/jazz/cojson@e0ddd47e42ac3848ec3db794bbf390375513f180:
+  cojson@https://pkg.pr.new/garden-co/jazz/cojson@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6:
     dependencies:
       '@noble/ciphers': 1.3.0
       '@noble/curves': 1.9.7
       '@noble/hashes': 1.8.0
       '@opentelemetry/api': 1.9.0
       '@scure/base': 1.2.1
-      cojson-core-napi: https://pkg.pr.new/garden-co/jazz/cojson-core-napi@e0ddd47e42ac3848ec3db794bbf390375513f180
-      cojson-core-wasm: https://pkg.pr.new/garden-co/jazz/cojson-core-wasm@e0ddd47e42ac3848ec3db794bbf390375513f180
+      cojson-core-napi: https://pkg.pr.new/garden-co/jazz/cojson-core-napi@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6
+      cojson-core-wasm: https://pkg.pr.new/garden-co/jazz/cojson-core-wasm@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6
       neverthrow: 7.2.0
       unicode-segmenter: 0.12.0
 
@@ -13160,16 +13160,16 @@ snapshots:
       filelist: 1.0.4
       minimatch: 3.1.2
 
-  jazz-tools@https://pkg.pr.new/garden-co/jazz/jazz-tools@e0ddd47e42ac3848ec3db794bbf390375513f180(@tiptap/pm@2.26.3)(csstype@3.1.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
+  jazz-tools@https://pkg.pr.new/garden-co/jazz/jazz-tools@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6(@tiptap/pm@2.26.3)(csstype@3.1.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
       '@manuscripts/prosemirror-recreate-steps': 0.1.4
       '@scure/base': 1.2.1
       '@scure/bip39': 1.6.0
       '@tiptap/core': 2.26.3(@tiptap/pm@2.26.3)
       clsx: 2.1.1
-      cojson: https://pkg.pr.new/garden-co/jazz/cojson@e0ddd47e42ac3848ec3db794bbf390375513f180
-      cojson-storage-indexeddb: https://pkg.pr.new/garden-co/jazz/cojson-storage-indexeddb@e0ddd47e42ac3848ec3db794bbf390375513f180
-      cojson-transport-ws: https://pkg.pr.new/garden-co/jazz/cojson-transport-ws@e0ddd47e42ac3848ec3db794bbf390375513f180
+      cojson: https://pkg.pr.new/garden-co/jazz/cojson@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6
+      cojson-storage-indexeddb: https://pkg.pr.new/garden-co/jazz/cojson-storage-indexeddb@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6
+      cojson-transport-ws: https://pkg.pr.new/garden-co/jazz/cojson-transport-ws@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6
       fast-myers-diff: 3.2.0
       goober: 2.1.18(csstype@3.1.3)
       prosemirror-example-setup: 1.2.3
@@ -13187,14 +13187,14 @@ snapshots:
       - '@tiptap/pm'
       - csstype
 
-  jazz-webhook@https://pkg.pr.new/garden-co/jazz/jazz-webhook@e0ddd47e42ac3848ec3db794bbf390375513f180(@tiptap/pm@2.26.3)(csstype@3.1.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
+  jazz-webhook@https://pkg.pr.new/garden-co/jazz/jazz-webhook@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6(@tiptap/pm@2.26.3)(csstype@3.1.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
       '@hono/zod-validator': 0.7.4(hono@4.9.10)(zod@3.25.76)
-      cojson: https://pkg.pr.new/garden-co/jazz/cojson@e0ddd47e42ac3848ec3db794bbf390375513f180
-      cojson-storage-sqlite: https://pkg.pr.new/garden-co/jazz/cojson-storage-sqlite@e0ddd47e42ac3848ec3db794bbf390375513f180
-      cojson-transport-ws: https://pkg.pr.new/garden-co/jazz/cojson-transport-ws@e0ddd47e42ac3848ec3db794bbf390375513f180
+      cojson: https://pkg.pr.new/garden-co/jazz/cojson@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6
+      cojson-storage-sqlite: https://pkg.pr.new/garden-co/jazz/cojson-storage-sqlite@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6
+      cojson-transport-ws: https://pkg.pr.new/garden-co/jazz/cojson-transport-ws@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6
       hono: 4.9.10
-      jazz-tools: https://pkg.pr.new/garden-co/jazz/jazz-tools@e0ddd47e42ac3848ec3db794bbf390375513f180(@tiptap/pm@2.26.3)(csstype@3.1.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      jazz-tools: https://pkg.pr.new/garden-co/jazz/jazz-tools@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6(@tiptap/pm@2.26.3)(csstype@3.1.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       zod: 3.25.76
     transitivePeerDependencies:
       - '@bam.tech/react-native-image-resizer'

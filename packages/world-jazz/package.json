@@ -33,8 +33,8 @@
   },
   "dependencies": {
     "@vercel/workflow-world": "workspace:*",
-    "jazz-tools": "https://pkg.pr.new/garden-co/jazz/jazz-tools@e0ddd47e42ac3848ec3db794bbf390375513f180",
-    "jazz-webhook": "https://pkg.pr.new/garden-co/jazz/jazz-webhook@e0ddd47e42ac3848ec3db794bbf390375513f180",
+    "jazz-tools": "https://pkg.pr.new/garden-co/jazz/jazz-tools@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6",
+    "jazz-webhook": "https://pkg.pr.new/garden-co/jazz/jazz-webhook@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6",
     "zod": "catalog:"
   }
 }

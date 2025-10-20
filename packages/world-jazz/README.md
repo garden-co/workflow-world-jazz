@@ -36,7 +36,7 @@ For production use, use the official [Jazz World](https://github.com/garden-co/v
 4. Create a webhook registry:
 
     ```bash
-    pnpm dlx https://pkg.pr.new/garden-co/jazz/jazz-run@e0ddd47e42ac3848ec3db794bbf390375513f180 webhook create-registry >> .env.local
+    pnpm dlx https://pkg.pr.new/garden-co/jazz/jazz-run@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6 webhook create-registry >> .env.local
     ```
 
     Your .env.local file should now have credentials for both the worker and the registry account, as well as a registry ID.
@@ -45,13 +45,13 @@ For production use, use the official [Jazz World](https://github.com/garden-co/v
 
     ```bash
     set -a && source .env.local
-    pnpm dlx https://pkg.pr.new/garden-co/jazz/jazz-run@e0ddd47e42ac3848ec3db794bbf390375513f180 webhook grant --accountID $JAZZ_WORKER_ACCOUNT
+    pnpm dlx https://pkg.pr.new/garden-co/jazz/jazz-run@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6 webhook grant --accountID $JAZZ_WORKER_ACCOUNT
     ```
 
 6. Run the webhook registry:
 
     ```bash
-    pnpm dlx https://pkg.pr.new/garden-co/jazz/jazz-run@e0ddd47e42ac3848ec3db794bbf390375513f180 webhook run
+    pnpm dlx https://pkg.pr.new/garden-co/jazz/jazz-run@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6 webhook run
     ```
 
 7. Run your app:
