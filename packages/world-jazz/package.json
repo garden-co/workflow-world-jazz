@@ -18,7 +18,9 @@
     "dev": "tsc --watch",
     "clean": "tsc --build --clean",
     "test": "vitest run src",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "queue:setup": "./scripts/setup-queue.sh",
+    "queue:run": "dotenv -c -- jazz-run webhook run"
   },
   "peerDependencies": {
     "@types/json-schema": "catalog:",
@@ -29,6 +31,8 @@
     "@types/json-schema": "catalog:",
     "@types/node": "catalog:",
     "@vercel/workflow-tsconfig": "workspace:*",
+    "dotenv-cli": "^7.4.2",
+    "jazz-run": "https://pkg.pr.new/garden-co/jazz/jazz-run@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6",
     "vitest": "^3.2.4"
   },
   "dependencies": {

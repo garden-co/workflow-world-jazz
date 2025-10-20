@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-JAZZ_RUN="pnpm dlx https://pkg.pr.new/garden-co/jazz/jazz-run@98ef5d75cc3085a70fbf47060937a4c67f116677"
+JAZZ_RUN="pnpm exec jazz-run"
 
 if [ -z "$JAZZ_API_KEY" ]; then
   echo "JAZZ_API_KEY is not set"

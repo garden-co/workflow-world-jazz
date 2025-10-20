@@ -25,16 +25,16 @@ For production use, use the official [Jazz World](https://github.com/garden-co/v
 1. Setup the Jazz queue:
 
     ```bash
-    JAZZ_API_KEY=<your-api-key> ./queue/setup.sh > .env.local
+    JAZZ_API_KEY=<your-api-key> pnpm --silent queue:setup > .env.local
     ```
 
 1. Run the Jazz queue:
 
     ```bash
-    docker compose --env-file=.env.local up -d
+    pnpm queue:run
     ```
 
-1. Run your app:
+1. In a separate shell, run your app:
 
     ```bash
     export WORKFLOW_TARGET_WORLD=@vercel/workflow-world-jazz

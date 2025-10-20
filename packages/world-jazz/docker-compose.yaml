@@ -1,9 +1,0 @@
-services:
-  jazz-queue:
-    build:
-      context: queue
-    environment:
-      - JAZZ_API_KEY=${JAZZ_API_KEY}
-      - JAZZ_WEBHOOK_ACCOUNT=${JAZZ_WEBHOOK_ACCOUNT}
-      - JAZZ_WEBHOOK_ACCOUNT_SECRET=${JAZZ_WEBHOOK_ACCOUNT_SECRET}
-      - JAZZ_WEBHOOK_REGISTRY_ID=${JAZZ_WEBHOOK_REGISTRY_ID}
