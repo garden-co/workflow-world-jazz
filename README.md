@@ -2,7 +2,7 @@
 
 A Jazz-based World implementation for the [Workflow Development Kit](https://useworkflow.dev).
 
-You can follow these steps to try out Jazz as the backend for the [Workflow Development Kit examples](https://github.com/vercel/workflow-examples) or when building your own apps using Workflows.
+You can follow these steps to try out Jazz as the backend for the [examples in the Workflow Development Kit](https://github.com/vercel/workflow/tree/main/examples) or when building your own apps using Workflows.
 
 ## Installation
 
@@ -142,3 +142,26 @@ You can also use the open-source self-hostable version of Jazz. This requires ru
 | `JAZZ_WEBHOOK_REGISTRY_SECRET` | Secret for the webhook registry (only if self-hosting)                      | -                                                                          |
 | `JAZZ_SYNC_SERVER`             | Sync server URL (only if self-hosting)                | Jazz Cloud (`wss://cloud.jazz.tools/?key=${JAZZ_API_KEY}`)                 |
 | `JAZZ_WEBHOOK_ENDPOINT`        | The endpoint where webhooks should get delivered      | `http://localhost:${PORT}` or `http://localhost:3000` if `PORT` is not set |
+
+Package Sidebar
+Install
+
+npm i workflow-world-jazz
+Weekly Downloads
+
+3
+Version
+
+4.0.1-beta.1
+License
+
+none
+Last publish
+
+6 months ago
+Collaborators
+
+    anselm_io
+
+Analyze security with SocketCheck bundle sizeView package healthExplore dependencies
+Report malware
