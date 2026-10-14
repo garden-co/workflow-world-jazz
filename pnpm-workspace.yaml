@@ -1,0 +1,7 @@
+# Build scripts reviewed for CI installs: none of these are needed at runtime
+# or by the tests, which use the packages' JS fallbacks and prebuilt binaries.
+allowBuilds:
+  '@swc/core': false
+  better-sqlite3: false
+  cbor-extract: false
+  esbuild: false

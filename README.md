@@ -1,6 +1,9 @@
 # workflow-world-jazz
 
-A Jazz-based World implementation for the [Workflow Development Kit](https://useworkflow.dev).
+A Jazz-based World implementation for the [Workflow SDK](https://workflow.dev).
+
+This version implements the Workflow SDK v5 World contract (spec version 8) and
+requires `workflow` 5.x. For `workflow` 4.x, use `workflow-world-jazz@4.0.1-beta.1`.
 
 You can follow these steps to try out Jazz as the backend for the [Workflow Development Kit examples](https://github.com/vercel/workflow-examples) or when building your own apps using Workflows.
 
@@ -129,6 +132,50 @@ You can also use the open-source self-hostable version of Jazz. This requires ru
 
     **For deploying your app in production,** you need to run the sync server and webhook registry on long running servers and set environment variables according to your `.env.local` file.
 
+
+## Deployment model
+
+Jazz syncs data as CRDTs, so it has no transaction or conditional write that two
+processes could race on and have exactly one win. The Workflow runtime needs
+exactly that for its event log: every event gets the next position in its run's
+log, and two writers must never take the same one. This World therefore
+allocates positions inside its own process, serializing the writes to each run.
+
+**Run one app process per Jazz worker account.** A single long-running server
+(including `next start`, a container, or a VM) is supported. Several instances
+sharing one worker account, such as autoscaled serverless functions, are not:
+two of them can append to the same run concurrently. The World detects a log
+written that way when it loads it and fails the run instead of replaying it out
+of order.
+
+A write is acknowledged once the sync server has it.
+
+## Upgrading from 4.x
+
+Workflow runs created by the 4.x World cannot be resumed by the 5.x runtime.
+The v5 World keeps its data under a new key on the worker account and does not
+read or modify what 4.x stored. Let in-flight runs finish on your 4.x
+deployment before switching a deployment over, since the switch leaves them
+unfinished.
+
+Not supported by this World: hook token retention (`experimental_minRetention`),
+hook takeover (`experimental_force`), dynamic workflows, and batched event
+writes. The runtime detects each of these and either refuses the feature or
+falls back to the unbatched path.
+
+## Development
+
+```bash
+pnpm test        # unit tests, against an in-memory Jazz account
+```
+
+The `@workflow/world-testing` conformance suite needs a local sync server, a
+worker account and a running webhook registry (see "Self-hosting everything"
+above). With those running and their variables exported:
+
+```bash
+JAZZ_SYNC_SERVER=ws://127.0.0.1:4200 pnpm test:conformance
+```
 
 ## Environment Variables Overview
 

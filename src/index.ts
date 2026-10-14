@@ -1,6 +1,8 @@
-import { createJazzWorld } from './world.js';
+import { createWorld } from './world.js';
 
 export type * from './types.js';
 
-export { createJazzWorld };
-export default createJazzWorld;
+export { createWorld };
+/** @deprecated Use `createWorld`. */
+export const createJazzWorld = createWorld;
+export default createWorld;

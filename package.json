@@ -1,6 +1,6 @@
 {
   "name": "workflow-world-jazz",
-  "version": "4.0.1-beta.1",
+  "version": "5.0.0",
   "type": "module",
   "main": "dist/index.js",
   "files": [
@@ -16,18 +16,23 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "clean": "tsc --build --clean",
-    "test": "vitest run src",
+    "test": "vitest run",
+    "test:conformance": "pnpm build && vitest run --config vitest.conformance.config.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/node": "^24.9.1",
+    "@workflow/world-testing": "5.0.5",
     "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.10"
   },
   "dependencies": {
-    "@workflow/world": "4.0.1-beta.0",
-    "jazz-tools": "^0.18.29",
-    "jazz-webhook": "^0.18.29",
-    "zod": "^4.1.12"
+    "@workflow/errors": "5.0.4",
+    "@workflow/utils": "5.0.2",
+    "@workflow/world": "5.0.4",
+    "cbor-x": "^1.6.0",
+    "jazz-tools": "^0.20.19",
+    "jazz-webhook": "^0.20.19",
+    "ulid": "^3.0.1"
   }
 }

@@ -1,71 +1,38 @@
-import {
-  EventTypeSchema,
-  HookSchema,
-  StepSchema,
-  ValidQueueName,
-  WorkflowRunSchema,
-} from '@workflow/world';
-import {
-  co,
-  Group,
-  type RefsToResolve,
-  type RefsToResolveStrict,
-  type Resolved,
-  z,
-} from 'jazz-tools';
+import { co, Group, z } from 'jazz-tools';
 
-export const JazzWorkflowRun = co.map({
-  ...WorkflowRunSchema.omit({
-    runId: true,
-    input: true,
-    output: true,
-    executionContext: true,
-  }).shape,
-  input: z.array(z.json()).optional(),
-  inputFile: co.fileStream().optional(),
-  output: z.json().optional(),
-  outputFile: co.fileStream().optional(),
-  executionContext: co.record(z.string(), z.json()).optional(),
-});
-
-export type JazzWorkflowRun = co.loaded<typeof JazzWorkflowRun>;
-
-export const JazzStep = co.map({
-  ...StepSchema.omit({
-    input: true,
-    output: true,
-  }).shape,
-  input: z.array(z.json()).optional(),
-  inputFile: co.fileStream().optional(),
-  output: z.json().optional(),
-  outputFile: co.fileStream().optional(),
-});
-
-export type JazzStep = co.loaded<typeof JazzStep>;
-
-export const JazzEvent = co.map({
+/**
+ * One run: its event log and its streams.
+ *
+ * The event log is the source of truth. Every entity the World reports (the
+ * run, its steps, hooks and waits) is derived by replaying it. `status`,
+ * `workflowName` and `createdAt` are copies kept so `runs.list` can filter
+ * without replaying every run.
+ */
+export const JazzRun = co.map({
   runId: z.string(),
-  eventType: EventTypeSchema,
-  eventData: z.json().optional(),
-  eventDataFile: co.fileStream().optional(),
-  correlationId: z.string().optional(),
+  workflowName: z.string(),
+  status: z.string(),
   createdAt: z.date(),
+  /** One encoded event per slot, slot 1 at index 0 (see `codec.ts`). */
+  events: co.list(z.string()),
+  streams: co.record(z.string(), co.fileStream()),
 });
 
-export type JazzEvent = co.loaded<typeof JazzEvent>;
-
-export const JazzHook = co.map({
-  ...HookSchema.shape,
-  metadata: z.json().optional(),
-});
-
-export type JazzHook = co.loaded<typeof JazzHook>;
+export type JazzRun = co.loaded<typeof JazzRun>;
 
 export const JazzQueueMessage = co.map({
-  message: z.json(),
+  /** Stable across redeliveries and reschedules of the same logical message. */
+  messageId: z.string(),
+  queueName: z.string(),
+  /** CBOR-encoded payload, base64 (payloads carry binary data). */
+  payload: z.string(),
   deploymentId: z.string().optional(),
   idempotencyKey: z.string().optional(),
-  queueName: ValidQueueName,
+  /** Earliest delivery time, for `delaySeconds`. */
+  notBefore: z.date().optional(),
+  /** Delivery attempt this copy of the message represents. */
+  attempt: z.number(),
+  createdAt: z.date(),
   processedAt: z.date().optional(),
 });
 
@@ -73,30 +40,40 @@ export type JazzQueueMessage = co.loaded<typeof JazzQueueMessage>;
 
 export const JazzQueueMessages = co.list(JazzQueueMessage);
 
-export type JazzQueueMessages = co.loaded<typeof JazzQueueMessages>;
-
 export const JazzQueue = co.map({
-  name: ValidQueueName,
+  name: z.string(),
+  webhookUrl: z.string(),
   messages: JazzQueueMessages,
+  /** idempotencyKey -> messageId, for deduplicating enqueues. */
+  idempotencyKeys: co.record(z.string(), z.string()),
 });
 
 export type JazzQueue = co.loaded<typeof JazzQueue>;
 
-export const JazzStream = co.map({
-  name: z.string(),
-  stream: co.fileStream(),
+/**
+ * Everything the v5 World stores. Kept under its own key so it never
+ * collides with data an older version of this package left on the account:
+ * runs created by the 4.x World cannot be replayed by the v5 runtime.
+ */
+export const JazzWorldRoot = co.map({
+  runs: co.record(z.string(), JazzRun),
+  /** token -> `${runId} ${hookId}` for every hook that can still receive. */
+  hookTokens: co.record(z.string(), z.string()),
+  /** hookId -> runId for every hook that can still receive. */
+  hookRuns: co.record(z.string(), z.string()),
+  /** `${queueName} ${webhookUrl}` -> queue. */
+  queues: co.record(z.string(), JazzQueue),
 });
 
-export type JazzStream = co.loaded<typeof JazzStream>;
+/** The World's root with its indexes loaded, as every caller uses it. */
+export type JazzWorldRoot = co.loaded<
+  typeof JazzWorldRoot,
+  { runs: true; hookTokens: true; hookRuns: true; queues: true }
+>;
 
 export const JazzStorageRoot = co.map({
-  runs: co.list(JazzWorkflowRun),
-  steps: co.record(z.string(), co.record(z.string(), JazzStep)),
-  events: co.record(z.string(), co.list(JazzEvent)),
-  hooks: co.record(z.string(), JazzHook),
+  workflowV5: JazzWorldRoot.optional(),
 });
-
-export type JazzStorageRoot = co.loaded<typeof JazzStorageRoot>;
 
 export const JazzStorageAccount = co
   .account({
@@ -105,61 +82,26 @@ export const JazzStorageAccount = co
   })
   .withMigration(async (account) => {
     if (!account.$jazz.has('root')) {
-      const defaultGroup = Group.create();
-      const runs = co.list(JazzWorkflowRun).create([], { owner: defaultGroup });
-      const steps = co
-        .record(z.string(), co.record(z.string(), JazzStep))
-        .create({}, { owner: defaultGroup });
-      const events = co
-        .record(z.string(), co.list(JazzEvent))
-        .create({}, { owner: defaultGroup });
-      const hooks = co
-        .record(z.string(), JazzHook)
-        .create({}, { owner: defaultGroup });
-      account.$jazz.set('root', {
-        runs,
-        events,
-        steps,
-        hooks,
-      });
+      account.$jazz.set('root', JazzStorageRoot.create({}, Group.create()));
     }
-
     const { root } = await account.$jazz.ensureLoaded({
       resolve: { root: true },
     });
-
-    if (root.runs === undefined) {
+    if (!root.$jazz.has('workflowV5')) {
+      const owner = root.$jazz.owner;
       root.$jazz.set(
-        'runs',
-        co.list(JazzWorkflowRun).create([], Group.create())
-      );
-    }
-    if (root.steps === undefined) {
-      root.$jazz.set(
-        'steps',
-        co
-          .record(z.string(), co.record(z.string(), JazzStep))
-          .create({}, Group.create())
-      );
-    }
-    if (root.events === undefined) {
-      root.$jazz.set(
-        'events',
-        co.record(z.string(), co.list(JazzEvent)).create({}, Group.create())
-      );
-    }
-    if (root.hooks === undefined) {
-      root.$jazz.set(
-        'hooks',
-        co.record(z.string(), JazzHook).create({}, Group.create())
+        'workflowV5',
+        JazzWorldRoot.create(
+          {
+            runs: co.record(z.string(), JazzRun).create({}, owner),
+            hookTokens: co.record(z.string(), z.string()).create({}, owner),
+            hookRuns: co.record(z.string(), z.string()).create({}, owner),
+            queues: co.record(z.string(), JazzQueue).create({}, owner),
+          },
+          owner
+        )
       );
     }
   });
 
 export type JazzStorageAccount = co.loaded<typeof JazzStorageAccount>;
-
-export type JazzStorageAccountResolver = <
-  const R extends RefsToResolve<JazzStorageAccount>,
->(
-  resolve: RefsToResolveStrict<JazzStorageAccount, R>
-) => Promise<Resolved<JazzStorageAccount, R>>;
